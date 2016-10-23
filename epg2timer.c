@@ -8,6 +8,9 @@
 
 #include <vdr/plugin.h>
 
+#include "eventfilter.h"
+#include "timertools.h"
+
 static const char *VERSION        = "0.0.1";
 static const char *DESCRIPTION    = "auto-create timer from epg";
 static const char *MAINMENUENTRY  = "epg2timer";
@@ -132,47 +135,6 @@ const char **cPluginEpg2timer::SVDRPHelpPages(void)
   return NULL;
 }
 
-class cEventSearch {
-private:
-  cString _pattern;
-
-public:
-  cEventSearch(const char *pattern) {
-    _pattern = pattern;
-    }
-
-  bool Matches(const char *text) const {
-    if ((text == NULL) || (*text == 0))
-       return false;
-    return (strcasestr(text, *_pattern) != NULL);
-    }
-  };
-
-static const cTimer *FindTimer(const cTimers *timers, const cSchedules *schedules, const cEvent *event)
-{
-  if ((timers != NULL) && (event != NULL)) {
-     Timers.IncBeingEdited();
-     for (cTimer *t = timers->First(); t; t = timers->Next(t)) {
-         bool clearActive = false;
-         if (!t->HasFlags(tfActive)) {
-            t->SetFlags(tfActive);
-            clearActive = true;
-            }
-         t->SetEventFromSchedule(schedules);
-         if (t->Matches(event)) {
-            if (clearActive)
-               t->ClrFlags(tfActive);
-            Timers.DecBeingEdited();
-            return t;
-            }
-         if (clearActive)
-            t->ClrFlags(tfActive);
-         }
-     Timers.DecBeingEdited();
-     }
-  return NULL;
-}
-
 cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, int &ReplyCode)
 {
   if (Command == NULL)
@@ -185,27 +147,32 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
         return "Missing search term";
         }
 
+     // get write lock on timer
      bool timersAreEdited = Timers.BeingEdited();
+     Timers.IncBeingEdited();
 
-     cEventSearch search(Option);
      int eventCount = 0;
      int foundCount = 0;
 
      cString msg = cString::sprintf("Matching Events for '%s':", Option);
      ReplyCode = 250;
+
+     // get read lock on schedules
      cSchedulesLock schedulesLock;
      const cSchedules *schedules = cSchedules::Schedules(schedulesLock);
      if (schedules) {
+        epg2timer::cEventFilter *filter = new epg2timer::cEventFilterContains(Option, epg2timer::cEventFilterContains::efAll);
+
         for (const cSchedule *s = schedules->First(); s; s = schedules->Next(s)) {
             const cList<cEvent> *events = s->Events();
             if (events) {
                for (const cEvent *e = events->First(); e; e = events->Next(e)) {
                    eventCount++;
-                   if (search.Matches(e->Title()) || search.Matches(e->ShortText()) || search.Matches(e->Description())) {
+                   if (filter->Matches(e)) {
                       foundCount++;
                       msg = cString::sprintf("%s\n(%u) %s: %s", *msg, e->EventID(), *TimeToString(e->StartTime()), e->Title());
                       if (!timersAreEdited) {
-                         const cTimer *t = FindTimer(&Timers, schedules, e);
+                         const cTimer *t = epg2timer::cTimerTools::FindTimer(&Timers, schedules, e);
                          if (t) {
                             msg = cString::sprintf("%s\n has timer", *msg);
                             }
@@ -221,9 +188,12 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
                    }
                }
             }
+        delete filter;
         }
-     msg = cString::sprintf("%s\n%d events processed, found %d", *msg, eventCount, foundCount);
 
+     Timers.DecBeingEdited();
+
+     msg = cString::sprintf("%s\n%d events processed, found %d", *msg, eventCount, foundCount);
      return msg;
      }
   return NULL;
