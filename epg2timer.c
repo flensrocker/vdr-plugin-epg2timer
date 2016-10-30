@@ -8,6 +8,7 @@
 
 #include <vdr/plugin.h>
 
+#include "epgtools.h"
 #include "eventfilter.h"
 #include "timertools.h"
 
@@ -18,6 +19,8 @@ static const char *MAINMENUENTRY  = "epg2timer";
 class cPluginEpg2timer : public cPlugin {
 private:
   // Add any member variables or functions you may need here.
+  epg2timer::cEpgTestHandler *_epgTestHandler;
+
 public:
   cPluginEpg2timer(void);
   virtual ~cPluginEpg2timer();
@@ -46,6 +49,7 @@ cPluginEpg2timer::cPluginEpg2timer(void)
   // Initialize any member variables here.
   // DON'T DO ANYTHING ELSE THAT MAY HAVE SIDE EFFECTS, REQUIRE GLOBAL
   // VDR OBJECTS TO EXIST OR PRODUCE ANY OUTPUT!
+  _epgTestHandler = NULL;
 }
 
 cPluginEpg2timer::~cPluginEpg2timer()
@@ -141,6 +145,18 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
      return NULL;
 
   // Process SVDRP commands this plugin implements
+  if (strcasecmp(Command, "seto") == 0) {
+     if (_epgTestHandler == NULL)
+        _epgTestHandler = new epg2timer::cEpgTestHandler();
+
+     int offset = 0;
+     if ((Option != NULL) && isnumber(Option))
+        offset = atoi(Option);
+     _epgTestHandler->SetStartOffset(offset);
+     ReplyCode = 250;
+     return cString::sprintf("Set EPG start offset to: %d", offset);
+     }
+  else
   if (strcasecmp(Command, "test") == 0) {
      if ((Option == NULL) || (*Option == 0)) {
         ReplyCode = 501;
