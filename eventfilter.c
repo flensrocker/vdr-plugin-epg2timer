@@ -24,6 +24,34 @@ const char *epg2timer::cEventFilter::Name() const
 }
 
 
+cTimer *epg2timer::cEventFilter::CreateTimer(const cEvent *event) const
+{
+  cTimer *timer = new cTimer(event);
+  if (_action == faInactive)
+     timer->ClrFlags(tfActive);
+  return timer;
+}
+
+
+bool epg2timer::cEventFilter::UpdateTimer(cTimer *timer, const cEvent *event) const
+{
+  // active flag should not be updated, it's under user's control
+  //if (_action == faInactive) {
+  //   if (timer->HasFlags(tfActive)) {
+  //      timer->ClrFlags(tfActive);
+  //      return true;
+  //      }
+  //   }
+  //else if (_action == faRecord) {
+  //   if (!timer->HasFlags(tfActive)) {
+  //      timer->SetFlags(tfActive);
+  //      return true;
+  //      }
+  //   }
+  return false;
+}
+
+
 epg2timer::cEventFilter::eFilterActions epg2timer::cEventFilter::Action() const
 {
   return _action;

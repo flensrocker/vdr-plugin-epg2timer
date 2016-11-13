@@ -175,7 +175,7 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
         }
 
      // get write lock on timer
-     bool timersAreEdited = Timers.BeingEdited();
+     bool hasTimerWriteLock = !Timers.BeingEdited();
      Timers.IncBeingEdited();
 
      int eventCount = 0;
@@ -197,18 +197,22 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
                        if (filter->Matches(e)) {
                           foundCount++;
                           msg = cString::sprintf("%s\nFilter: %s\n(%u) %s: %s", *msg, filter->Name(), e->EventID(), *TimeToString(e->StartTime()), e->Title());
-                          if (!timersAreEdited) {
-                             const cTimer *t = epg2timer::cTimerTools::FindTimer(&Timers, schedules, e);
+                          if (hasTimerWriteLock) {
+                             cTimer *t = epg2timer::cTimerTools::FindTimer(&Timers, schedules, e);
                              if (t) {
                                 msg = cString::sprintf("%s\n has timer", *msg);
+                                if (filter->UpdateTimer(t, e)) {
+                                   msg = cString::sprintf("%s (updated)", *msg);
+                                   Timers.SetModified();
+                                   }
                                 }
                              else {
-                                cTimer *nt = new cTimer(e);
-                                if (filter->Action() == epg2timer::cEventFilter::faInactive)
-                                   nt->ClrFlags(tfActive);
-                                Timers.Add(nt);
-                                Timers.SetModified();
-                                msg = cString::sprintf("%s\n created timer on %s", *msg, *e->ChannelID().ToString());
+                                cTimer *nt = filter->CreateTimer(e);
+                                if (nt != NULL) {
+                                   Timers.Add(nt);
+                                   Timers.SetModified();
+                                   msg = cString::sprintf("%s\n created timer on %s", *msg, *e->ChannelID().ToString());
+                                   }
                                 }
                              }
                           }

@@ -1,7 +1,7 @@
 #include "timertools.h"
 
 
-const cTimer *epg2timer::cTimerTools::FindTimer(cTimers *timers, const cSchedules *schedules, const cEvent *event)
+cTimer *epg2timer::cTimerTools::FindTimer(cTimers *timers, const cSchedules *schedules, const cEvent *event)
 {
   if ((timers == NULL) || (schedules == NULL) || (event == NULL))
      return NULL;

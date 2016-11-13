@@ -2,6 +2,7 @@
 #define epg2timer_eventfilter_h
 
 #include <vdr/epg.h>
+#include <vdr/timers.h>
 
 namespace epg2timer
 {
@@ -33,6 +34,9 @@ namespace epg2timer
 
     const char *Name() const;
     eFilterActions Action() const;
+
+    cTimer *CreateTimer(const cEvent *event) const;
+    bool UpdateTimer(cTimer *timer, const cEvent *event) const;
 
   private:
     cString _name;
