@@ -5,7 +5,7 @@
 
 namespace epg2timer
 {
-  class cEventFilter : public cListObject
+  class cEventFilterBase : public cListObject
   {
   public:
     enum eEventFields { efTitle       = 0x0001,
@@ -14,38 +14,63 @@ namespace epg2timer
                         efAll         = 0xFFFF
                       };
 
-    static void MoveFilters(cList<cEventFilter> &from, cList<cEventFilter> &to);
-
-    virtual ~cEventFilter(void) {};
+    cEventFilterBase(void) {};
+    virtual ~cEventFilterBase(void) {};
     virtual bool Matches(const cEvent *event) const = 0;
   };
 
-  // all filters in the list must match
-  class cEventFilterAnd : public cEventFilter
+  // Type returned by the filter file parser
+  class cEventFilter : public cEventFilterBase
   {
   public:
-    // filters will be empty afterwards,
-    // cEventFilterAnd will take control over cEventFilter objects
-    cEventFilterAnd(cList<cEventFilter> &filters);
-    virtual ~cEventFilterAnd(void) {};
+    enum eFilterActions { faRecord   = 1,
+                          faInactive = 2
+                        };
+
+    cEventFilter(const char *Name, eFilterActions Action, const cEventFilterBase *Filter);
+    virtual ~cEventFilter(void) {};
     virtual bool Matches(const cEvent *event) const;
 
+    const char *Name() const;
+    eFilterActions Action() const;
+
   private:
-    cList<cEventFilter> _filters;
+    cString _name;
+    eFilterActions _action;
+    const cEventFilterBase *_filter;
+  };
+
+  // base class for "and" and "or" filter
+  // cleans up the filter list
+  class cEventFilterList : public cEventFilterBase
+  {
+  public:
+    cEventFilterList(cList<cEventFilterBase> *filters);
+    virtual ~cEventFilterList(void);
+    virtual bool Matches(const cEvent *event) const;
+
+  protected:
+    cList<cEventFilterBase> *_filters;
+  };
+
+  // all filters in the list must match
+  class cEventFilterAnd : public cEventFilterList
+  {
+  public:
+    // cEventFilterAnd will take control over "filters"
+    cEventFilterAnd(cList<cEventFilterBase> *filters);
+    virtual ~cEventFilterAnd(void) {};
+    virtual bool Matches(const cEvent *event) const;
   };
 
   // at least one filter in the list must match
-  class cEventFilterOr : public cEventFilter
+  class cEventFilterOr : public cEventFilterList
   {
   public:
-    // filters will be empty afterwards,
-    // cEventFilterOr will take control over cEventFilter objects
-    cEventFilterOr(cList<cEventFilter> &filters);
+    // cEventFilterOr will take control over "filters"
+    cEventFilterOr(cList<cEventFilterBase> *filters);
     virtual ~cEventFilterOr(void) {};
     virtual bool Matches(const cEvent *event) const;
-
-  private:
-    cList<cEventFilter> _filters;
   };
 
   // The event must belong to a channel between fromChannel and toChannel.
@@ -54,7 +79,7 @@ namespace epg2timer
   // to toChannel's number match.
   // If toChannel is the invalid channel-id, all channels with numbers
   // from fromChannel's number match.
-  class cEventFilterChannel : public cEventFilter
+  class cEventFilterChannel : public cEventFilterBase
   {
   public:
     cEventFilterChannel(tChannelID fromChannel, tChannelID toChannel);
@@ -71,7 +96,7 @@ namespace epg2timer
   // TODO
   // - remove special characters from needle and text like '" etc.
   //   to stabilize matching
-  class cEventFilterContains : public cEventFilter
+  class cEventFilterContains : public cEventFilterBase
   {
   public:
     cEventFilterContains(const char *needle, int fields);

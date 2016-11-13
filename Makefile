@@ -53,7 +53,7 @@ DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 
 ### The object files (add further files here):
 
-OBJS = $(PLUGIN).o epgtools.o eventfilter.o timertools.o
+OBJS = $(PLUGIN).o epgtools.o eventfilter.o filtertools.o timertools.o
 
 ### The main target:
 

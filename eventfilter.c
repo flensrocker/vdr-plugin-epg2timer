@@ -1,24 +1,62 @@
 #include "eventfilter.h"
 
 
-void epg2timer::cEventFilter::MoveFilters(cList<cEventFilter> &from, cList<cEventFilter> &to)
+epg2timer::cEventFilter::cEventFilter(const char *Name, eFilterActions Action, const cEventFilterBase *Filter)
 {
-  cEventFilter *f;
-  while ((f = from.First()) != NULL) {
-        from.Del(f, false);
-        to.Add(f);
-        }
+  _name = Name;
+  _action = Action;
+  _filter = Filter;
 }
 
 
-epg2timer::cEventFilterAnd::cEventFilterAnd(cList<cEventFilter> &filters)
+bool epg2timer::cEventFilter::Matches(const cEvent *event) const
 {
-  MoveFilters(filters, _filters);
+  if (_filter == NULL)
+     return false;
+
+  return _filter->Matches(event);
+}
+
+
+const char *epg2timer::cEventFilter::Name() const
+{
+  return *_name;
+}
+
+
+epg2timer::cEventFilter::eFilterActions epg2timer::cEventFilter::Action() const
+{
+  return _action;
+}
+
+
+epg2timer::cEventFilterList::cEventFilterList(cList<cEventFilterBase> *filters)
+{
+  _filters = filters;
+}
+
+
+epg2timer::cEventFilterList::~cEventFilterList(void)
+{
+  delete _filters;
+  _filters = NULL;
+}
+
+
+bool epg2timer::cEventFilterList::Matches(const cEvent *event) const
+{
+  return false;
+}
+
+
+epg2timer::cEventFilterAnd::cEventFilterAnd(cList<cEventFilterBase> *filters)
+ :cEventFilterList(filters)
+{
 }
 
 bool epg2timer::cEventFilterAnd::Matches(const cEvent *event) const
 {
-  for (cEventFilter *f = _filters.First(); f; f = _filters.Next(f)) {
+  for (cEventFilterBase *f = _filters->First(); f; f = _filters->Next(f)) {
       if (!f->Matches(event))
          return false;
       }
@@ -26,14 +64,14 @@ bool epg2timer::cEventFilterAnd::Matches(const cEvent *event) const
 }
 
 
-epg2timer::cEventFilterOr::cEventFilterOr(cList<cEventFilter> &filters)
+epg2timer::cEventFilterOr::cEventFilterOr(cList<cEventFilterBase> *filters)
+ :cEventFilterList(filters)
 {
-  MoveFilters(filters, _filters);
 }
 
 bool epg2timer::cEventFilterOr::Matches(const cEvent *event) const
 {
-  for (cEventFilter *f = _filters.First(); f; f = _filters.Next(f)) {
+  for (cEventFilterBase *f = _filters->First(); f; f = _filters->Next(f)) {
       if (f->Matches(event))
          return true;
       }

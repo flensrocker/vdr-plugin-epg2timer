@@ -10,6 +10,7 @@
 
 #include "epgtools.h"
 #include "eventfilter.h"
+#include "filtertools.h"
 #include "timertools.h"
 
 static const char *VERSION        = "0.0.1";
@@ -160,7 +161,17 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
   if (strcasecmp(Command, "test") == 0) {
      if ((Option == NULL) || (*Option == 0)) {
         ReplyCode = 501;
-        return "Missing search term";
+        return "Missing filename";
+        }
+
+     cList<epg2timer::cEventFilter> filters;
+     if (!epg2timer::cFilterTools::LoadFilterFile(Option, filters)) {
+        ReplyCode = 501;
+        return cString::sprintf("Error in file %s", Option);
+        }
+     if (filters.Count() == 0) {
+        ReplyCode = 501;
+        return cString::sprintf("No filters in file %s", Option);
         }
 
      // get write lock on timer
@@ -170,41 +181,41 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
      int eventCount = 0;
      int foundCount = 0;
 
-     cString msg = cString::sprintf("Matching Events for '%s':", Option);
+     cString msg = cString::sprintf("Matching Events for filters in '%s':", Option);
      ReplyCode = 250;
 
      // get read lock on schedules
      cSchedulesLock schedulesLock;
      const cSchedules *schedules = cSchedules::Schedules(schedulesLock);
      if (schedules) {
-        epg2timer::cEventFilter *filter = new epg2timer::cEventFilterContains(Option, epg2timer::cEventFilterContains::efAll);
-
         for (const cSchedule *s = schedules->First(); s; s = schedules->Next(s)) {
             const cList<cEvent> *events = s->Events();
             if (events) {
                for (const cEvent *e = events->First(); e; e = events->Next(e)) {
                    eventCount++;
-                   if (filter->Matches(e)) {
-                      foundCount++;
-                      msg = cString::sprintf("%s\n(%u) %s: %s", *msg, e->EventID(), *TimeToString(e->StartTime()), e->Title());
-                      if (!timersAreEdited) {
-                         const cTimer *t = epg2timer::cTimerTools::FindTimer(&Timers, schedules, e);
-                         if (t) {
-                            msg = cString::sprintf("%s\n has timer", *msg);
-                            }
-                         else {
-                            cTimer *nt = new cTimer(e);
-                            nt->ClrFlags(tfActive);
-                            Timers.Add(nt);
-                            Timers.SetModified();
-                            msg = cString::sprintf("%s\n created timer on %s", *msg, *e->ChannelID().ToString());
-                            }
-                         }
+                   for (const epg2timer::cEventFilter *filter = filters.First(); filter; filter = filters.Next(filter)) {
+                       if (filter->Matches(e)) {
+                          foundCount++;
+                          msg = cString::sprintf("%s\nFilter: %s\n(%u) %s: %s", *msg, filter->Name(), e->EventID(), *TimeToString(e->StartTime()), e->Title());
+                          if (!timersAreEdited) {
+                             const cTimer *t = epg2timer::cTimerTools::FindTimer(&Timers, schedules, e);
+                             if (t) {
+                                msg = cString::sprintf("%s\n has timer", *msg);
+                                }
+                             else {
+                                cTimer *nt = new cTimer(e);
+                                if (filter->Action() == epg2timer::cEventFilter::faInactive)
+                                   nt->ClrFlags(tfActive);
+                                Timers.Add(nt);
+                                Timers.SetModified();
+                                msg = cString::sprintf("%s\n created timer on %s", *msg, *e->ChannelID().ToString());
+                                }
+                             }
+                          }
                       }
                    }
                }
             }
-        delete filter;
         }
 
      Timers.DecBeingEdited();
