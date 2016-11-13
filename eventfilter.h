@@ -18,6 +18,18 @@ namespace epg2timer
     virtual bool Matches(const cEvent *event) const = 0;
   };
   
+  class cEventFilterChannel : public cEventFilter
+  {
+  public:
+    cEventFilterChannel(tChannelID fromChannel, tChannelID toChannel);
+    virtual ~cEventFilterChannel(void) {};
+    virtual bool Matches(const cEvent *event) const;
+
+  private:
+    tChannelID _fromChannel;
+    tChannelID _toChannel;
+  };
+
   class cEventFilterContains : public cEventFilter
   {
   public:
