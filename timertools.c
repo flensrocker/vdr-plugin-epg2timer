@@ -14,7 +14,9 @@ const cTimer *epg2timer::cTimerTools::FindTimer(cTimers *timers, const cSchedule
          clearActive = true;
          }
       t->SetEventFromSchedule(schedules);
-      if (t->Matches(event)) {
+      int overlap = 0;
+      eTimerMatch match = t->Matches(event, &overlap);
+      if (match == tmFull) {
          if (clearActive)
             t->ClrFlags(tfActive);
          return t;
