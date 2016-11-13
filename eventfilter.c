@@ -1,6 +1,46 @@
 #include "eventfilter.h"
 
 
+void epg2timer::cEventFilter::MoveFilters(cList<cEventFilter> &from, cList<cEventFilter> &to)
+{
+  cEventFilter *f;
+  while ((f = from.First()) != NULL) {
+        from.Del(f, false);
+        to.Add(f);
+        }
+}
+
+
+epg2timer::cEventFilterAnd::cEventFilterAnd(cList<cEventFilter> &filters)
+{
+  MoveFilters(filters, _filters);
+}
+
+bool epg2timer::cEventFilterAnd::Matches(const cEvent *event) const
+{
+  for (cEventFilter *f = _filters.First(); f; f = _filters.Next(f)) {
+      if (!f->Matches(event))
+         return false;
+      }
+  return true;
+}
+
+
+epg2timer::cEventFilterOr::cEventFilterOr(cList<cEventFilter> &filters)
+{
+  MoveFilters(filters, _filters);
+}
+
+bool epg2timer::cEventFilterOr::Matches(const cEvent *event) const
+{
+  for (cEventFilter *f = _filters.First(); f; f = _filters.Next(f)) {
+      if (f->Matches(event))
+         return true;
+      }
+  return false;
+}
+
+
 epg2timer::cEventFilterChannel::cEventFilterChannel(tChannelID fromChannel, tChannelID toChannel)
 {
   _fromChannel = fromChannel;
