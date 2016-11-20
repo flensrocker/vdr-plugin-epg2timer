@@ -88,6 +88,28 @@ int epg2timer::cParameterParser::Count(const char *Name) const
 }
 
 
+const char *epg2timer::cParameterParser::At(int Index, cString &Name) const
+{
+  Name = "";
+  if ((Index < 0) || (Index >= _list.Size()))
+     return NULL;
+
+  const char *text = _list[Index];
+  if (text == NULL)
+     return NULL;
+
+  int pos = 0;
+  int len = strlen(text);
+  while ((pos < len) && (text[pos] != '='))
+        pos++;
+  Name = cString(text, text + pos);
+  if (pos < len - 1)
+     return text + pos + 1;
+
+  return NULL;
+}
+
+
 epg2timer::cEventFilterBase *epg2timer::cFilterTools::ParseFilterLine(const char *FilterLine, cList<cNestedItem> *SubItems)
 {
   if ((FilterLine == NULL) || (*FilterLine == 0))
@@ -154,6 +176,9 @@ epg2timer::cEventFilterBase *epg2timer::cFilterTools::ParseFilterLine(const char
             }
         }
      return new cEventFilterContains(needle, fields);
+     }
+  else if (strcmp(type, "tag") == 0) {
+     //return new cEventFilterTag();
      }
   
   return NULL;

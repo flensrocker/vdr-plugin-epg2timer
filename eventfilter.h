@@ -114,7 +114,52 @@ namespace epg2timer
     bool Matches(const char *text) const;
   };
 
-  // TODO cEventFilterDescTag (find tag in description and match contents, e.g. season, year, actor etc.)
+  class cEventFilterTag : public cEventFilterBase
+  {
+  public:
+    class cTagFilter : public cListObject
+    {
+    public:
+      enum eTagFilterOperator { tfoInvalid           = 0,
+                                tfoIntEqual          = 1,
+                                tfoIntNotEqual       = 2,
+                                tfoIntLesser         = 3,
+                                tfoIntLesserOrEqual  = 4,
+                                tfoIntGreater        = 5,
+                                tfoIntGreaterOrEqual = 6,
+                                tfoIsInt             = 10,
+                                tfoStrEqual          = 11,
+                                tfoStrNotEqual       = 12,
+                                tfoStrLesser         = 13,
+                                tfoStrLesserOrEqual  = 14,
+                                tfoStrGreater        = 15,
+                                tfoStrGreaterOrEqual = 16,
+                                tfoStrIsEmpty        = 17,
+                                tfoStrIsNotEmpty     = 18,
+                                tfoStrContains       = 19,
+                                tfoStrNotContains    = 20
+                              };
+
+      cTagFilter(const char *tag, eTagFilterOperator op, const char *comp);
+      virtual ~cTagFilter(void) {};
+
+      bool Matches(const char *tag, const char *value) const;
+      const char *Tag(void) const { return *_tag; };
+
+    private:
+      cString _tag;
+      eTagFilterOperator _op;
+      int _intComp;
+      cString _strComp;
+    };
+
+    cEventFilterTag(cList<cTagFilter> *tagFilters);
+    virtual ~cEventFilterTag(void);
+    virtual bool Matches(const cEvent *event) const;
+
+  private:
+    cList<cTagFilter> *_tagFilters;
+  };
 }
 
 #endif

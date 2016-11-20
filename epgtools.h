@@ -1,23 +1,14 @@
 #ifndef epg2timer_epgtools_h
 #define epg2timer_epgtools_h
 
-#include <vdr/epg.h>
+#include <vdr/tools.h>
 
 namespace epg2timer
 {
-  class cEpgTestHandler : public cEpgHandler
+  class cEpgTools
   {
-  private:
-    int _startOffset; // minutes
-
   public:
-    cEpgTestHandler(void);
-    virtual ~cEpgTestHandler(void);
-    virtual bool SetDescription(cEvent *Event, const char *Description);
-    virtual bool SetStartTime(cEvent *Event, time_t StartTime);
-    virtual bool SetVps(cEvent *Event, time_t Vps);
-
-    void SetStartOffset(int Offset);
+    static cStringList *ExtractTagValues(const cStringList &tags, const char *description);
   };
 }
 

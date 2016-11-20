@@ -1,39 +1,49 @@
 #include "epgtools.h"
 
 
-epg2timer::cEpgTestHandler::cEpgTestHandler()
+cStringList *epg2timer::cEpgTools::ExtractTagValues(const cStringList &tags, const char *description)
 {
-  _startOffset = 0;
-}
+  if ((description == NULL) || (*description == 0))
+     return NULL;
 
-epg2timer::cEpgTestHandler::~cEpgTestHandler()
-{
-}
+  cVector<int> lines;
+  lines.Append(0);
+  int len = strlen(description) - 1; // ignore last newline if present
+  for (int pos = 0; pos < len; pos++) {
+      if (description[pos] == '\n')
+         lines.Append(pos + 1);
+      }
+  lines.Append(len + 1);
 
-bool epg2timer::cEpgTestHandler::SetDescription(cEvent *Event, const char *Description)
-{
-  if (_startOffset != 0) {
-     cString desc = cString::sprintf("%s\nStart-Offset: %d", Description, _startOffset);
-     Event->SetDescription(*desc);
-     }
-  else
-     Event->SetDescription(Description);
-  return true;
-}
+  cStringList *values = new cStringList(tags.Size());
 
-bool epg2timer::cEpgTestHandler::SetStartTime(cEvent *Event, time_t StartTime)
-{
-  Event->SetStartTime(StartTime + 60 * _startOffset);
-  return true;
-}
+  for (int i = 0; i < tags.Size(); i++) {
+      const char *tag = tags[i];
+      if ((tag == NULL) || (*tag == 0))
+         values->Append(NULL);
+      else {
+         bool found = false;
+         int tagLen = strlen(tag);
+         for (int l = 0; l < lines.Size() - 1; l++) {
+             int lineLen = lines[l + 1] - lines[l];
+             if ((lineLen > tagLen + 1)
+             && startswith(description + lines[l], tag)
+             && (description[tagLen] == ':')) {
+                int vPos = lines[l] + tagLen + 1;
+                while ((vPos < lines[l + 1]) && (description[vPos] == ' '))
+                      vPos++;
+                if (vPos < lines[l + 1]) {
+                   cString tmp(description + vPos, description + lines[l + 1] - 1);
+                   values->Append(strdup(*tmp));
+                   found = true;
+                }
+                break;
+                }
+             }
+         if (!found)
+            values->Append(NULL);
+         }
+      }
 
-bool epg2timer::cEpgTestHandler::SetVps(cEvent *Event, time_t Vps)
-{
-  Event->SetVps(0);
-  return true;
-}
-
-void epg2timer::cEpgTestHandler::SetStartOffset(int Offset)
-{
-  _startOffset = Offset;
+  return values;
 }

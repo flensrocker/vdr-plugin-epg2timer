@@ -202,3 +202,102 @@ bool epg2timer::cEventFilterContains::Matches(const char *text) const
   // TODO remove special characters like '" etc. to get better match
   return (strcasestr(text, *_needle) != NULL);
 }
+
+
+epg2timer::cEventFilterTag::cTagFilter::cTagFilter(const char *tag, eTagFilterOperator op, const char *comp)
+{
+  _tag = tag;
+  _op = op;
+  _intComp = 0;
+  _strComp = "";
+
+  if ((*_tag == NULL) || (**_tag == 0))
+     _op = tfoInvalid;
+  else if ((_op > tfoInvalid) && (_op < tfoIsInt)) {
+     if (!isnumber(comp))
+        _op = tfoInvalid;
+     else
+        _intComp = (int)StrToNum(comp);
+     }
+  else
+     _strComp = comp;
+}
+
+
+bool epg2timer::cEventFilterTag::cTagFilter::Matches(const char *tag, const char *value) const
+{
+  if ((_op == tfoInvalid) || (value == NULL))
+     return false;
+
+  if (_op < tfoIsInt) {
+     if (!isnumber(value))
+        return false;
+
+     int intval = (int)StrToNum(value);
+     switch (_op) {
+       case tfoIntEqual:
+         return (intval == _intComp);
+       case tfoIntNotEqual:
+         return (intval != _intComp);
+       case tfoIntLesser:
+         return (intval < _intComp);
+       case tfoIntLesserOrEqual:
+         return (intval <= _intComp);
+       case tfoIntGreater:
+         return (intval > _intComp);
+       case tfoIntGreaterOrEqual:
+         return (intval >= _intComp);
+       default:
+         break;
+       }
+     }
+  else {
+     switch (_op) {
+       case tfoStrEqual:
+         return (strcasecmp(value, _strComp) == 0);
+       case tfoStrNotEqual:
+         return (strcasecmp(value, _strComp) != 0);
+       case tfoStrLesser:
+         return (strcasecmp(value, _strComp) < 0);
+       case tfoStrLesserOrEqual:
+         return (strcasecmp(value, _strComp) <= 0);
+       case tfoStrGreater:
+         return (strcasecmp(value, _strComp) > 0);
+       case tfoStrGreaterOrEqual:
+         return (strcasecmp(value, _strComp) >= 0);
+       case tfoStrIsEmpty:
+         return (*value == 0);
+       case tfoStrIsNotEmpty:
+         return (*value != 0);
+       case tfoStrContains:
+         return (strcasestr(value, *_strComp) != NULL);
+       case tfoStrNotContains:
+         return (strcasestr(value, *_strComp) == NULL);
+       default:
+         break;
+       }
+     }
+
+  return false;
+}
+
+
+epg2timer::cEventFilterTag::cEventFilterTag(cList<cTagFilter> *tagFilters)
+{
+  _tagFilters = tagFilters;
+}
+
+
+epg2timer::cEventFilterTag::~cEventFilterTag(void)
+{
+  delete _tagFilters;
+}
+
+
+bool epg2timer::cEventFilterTag::Matches(const cEvent *event) const
+{
+  
+  for (const cTagFilter *tf = _tagFilters->First(); tf; tf = _tagFilters->Next(tf)) {
+      }
+  return true;
+}

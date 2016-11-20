@@ -17,6 +17,8 @@ namespace epg2timer
     const char *Get(const char *Name, int Number = 0) const;
     // Get the number of appearances of parameter "Name".
     int Count(const char *Name) const;
+    int Size(void) const { return _list.Size(); };
+    const char *At(int Index, cString &Name) const;
 
   private:
     cStringList  _list;
@@ -32,6 +34,17 @@ namespace epg2timer
     // Contains filter-line:
     // type=contains,search=needle,field=all,field=title,field=shorttext,field=description
     // "field" is optional, default is "all"
+
+    // Tag filter-line:
+    // type=tag,<tagname>:[int|str]=<op><value>,<tagname>:[int|str]=<op><value>,...
+    //   int-ops: ==, !=, <, <=, >, >=
+    //   str-ops: ==, !=, <, <=, >, >=, empty, notempty, contains, notcontains
+    //   If multiple tags are given, all must match.
+    // examples:
+    //   find all events with a season number greater or equal to 4 and lesser then 7:
+    //   type=tag,Staffel:int=>=4,Staffel:int=<7
+    //   find all news events:
+    //   type=tag,Genre:str===Nachrichten
 
     // And filter:
     // type=and {
