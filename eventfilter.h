@@ -137,7 +137,9 @@ namespace epg2timer
                                 tfoStrIsEmpty        = 17,
                                 tfoStrIsNotEmpty     = 18,
                                 tfoStrContains       = 19,
-                                tfoStrNotContains    = 20
+                                tfoStrNotContains    = 20,
+                                tfoStrStartswith     = 21,
+                                tfoStrEndswith       = 22
                               };
 
       cTagFilter(const char *tag, eTagFilterOperator op, const char *comp);
@@ -151,6 +153,7 @@ namespace epg2timer
       eTagFilterOperator _op;
       int _intComp;
       cString _strComp;
+      int _strCompLen;
     };
 
     cEventFilterTag(cList<cTagFilter> *tagFilters);

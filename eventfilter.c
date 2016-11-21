@@ -210,6 +210,7 @@ epg2timer::cEventFilterTag::cTagFilter::cTagFilter(const char *tag, eTagFilterOp
   _op = op;
   _intComp = 0;
   _strComp = "";
+  _strCompLen = 0;
 
   if ((*_tag == NULL) || (**_tag == 0))
      _op = tfoInvalid;
@@ -219,8 +220,10 @@ epg2timer::cEventFilterTag::cTagFilter::cTagFilter(const char *tag, eTagFilterOp
      else
         _intComp = (int)StrToNum(comp);
      }
-  else
+  else {
      _strComp = comp;
+     _strCompLen = strlen(comp);
+     }
 }
 
 
@@ -273,6 +276,10 @@ bool epg2timer::cEventFilterTag::cTagFilter::Matches(const char *tag, const char
          return (strcasestr(value, *_strComp) != NULL);
        case tfoStrNotContains:
          return (strcasestr(value, *_strComp) == NULL);
+       case tfoStrStartswith:
+         return (strlen(value) <= _strCompLen) && startswith(*_strComp, value);
+       case tfoStrEndswith:
+         return (strlen(value) <= _strCompLen) && endswith(*_strComp, value);
        default:
          break;
        }

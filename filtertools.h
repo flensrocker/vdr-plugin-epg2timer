@@ -36,15 +36,17 @@ namespace epg2timer
     // "field" is optional, default is "all"
 
     // Tag filter-line:
-    // type=tag,<tagname>:[int|str]=<op><value>,<tagname>:[int|str]=<op><value>,...
+    // type=tag,<tagname>=[int|str]<op><value>,<tagname>=[int|str]<op><value>,...
     //   int-ops: ==, !=, <, <=, >, >=
-    //   str-ops: ==, !=, <, <=, >, >=, empty, notempty, contains, notcontains
+    //   str-ops: ==, !=, <, <=, >, >=, empty, notempty, contains, notcontains, startswith, endswith
     //   If multiple tags are given, all must match.
     // examples:
     //   find all events with a season number greater or equal to 4 and lesser then 7:
-    //   type=tag,Staffel:int=>=4,Staffel:int=<7
+    //   type=tag,Staffel=int>=4,Staffel=int<7
     //   find all news events:
-    //   type=tag,Genre:str===Nachrichten
+    //   type=tag,Genre=str==Nachrichten
+    //   find the episode with "Stein, Schere, Spock" in it:
+    //   type=tag,Episode=strcontainsStein\, Schere\, Spock
 
     // And filter:
     // type=and {
