@@ -153,7 +153,7 @@ namespace epg2timer
       eTagFilterOperator _op;
       int _intComp;
       cString _strComp;
-      int _strCompLen;
+      uint _strCompLen;
     };
 
     cEventFilterTag(cList<cTagFilter> *tagFilters);
