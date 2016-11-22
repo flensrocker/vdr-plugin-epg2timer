@@ -47,13 +47,14 @@ SOFILE = libvdr-$(PLUGIN).so
 
 ### Includes and Defines (add further entries here):
 
-INCLUDES +=
+INCLUDES += $(shell pkg-config --cflags icu-uc icu-io)
+LDFLAGS += $(shell pkg-config --libs icu-uc icu-io)
 
 DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 
 ### The object files (add further files here):
 
-OBJS = $(PLUGIN).o epgtools.o eventfilter.o filtertools.o timertools.o
+OBJS = $(patsubst %.c,%.o,$(wildcard *.c))
 
 ### The main target:
 
