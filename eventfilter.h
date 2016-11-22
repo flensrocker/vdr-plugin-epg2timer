@@ -35,6 +35,7 @@ namespace epg2timer
     const char *Name() const;
     eFilterActions Action() const;
 
+    bool AuxMatches(const cTimer *timer) const;
     cTimer *CreateTimer(const cEvent *event) const;
     bool UpdateTimer(cTimer *timer, const cEvent *event) const;
 

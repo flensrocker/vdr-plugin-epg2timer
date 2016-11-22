@@ -24,9 +24,23 @@ const char *epg2timer::cEventFilter::Name() const
 }
 
 
+bool epg2timer::cEventFilter::AuxMatches(const cTimer *timer) const
+{
+  const char *aux = timer->Aux();
+  if ((aux == NULL) || (strlen(aux) < 10) || !startswith(aux, "epg2timer="))
+     return false;
+
+  return (strcasecmp(*_name, aux + 10) == 0);
+}
+
+
 cTimer *epg2timer::cEventFilter::CreateTimer(const cEvent *event) const
 {
   cTimer *timer = new cTimer(event);
+
+  // mark timer
+  timer->SetAux(*cString::sprintf("epg2timer=%s", Name()));
+
   if (_action == faInactive)
      timer->ClrFlags(tfActive);
   return timer;
@@ -35,6 +49,9 @@ cTimer *epg2timer::cEventFilter::CreateTimer(const cEvent *event) const
 
 bool epg2timer::cEventFilter::UpdateTimer(cTimer *timer, const cEvent *event) const
 {
+  if (!AuxMatches(timer))
+     return false;
+
   // active flag should not be updated, it's under user's control
   //if (_action == faInactive) {
   //   if (timer->HasFlags(tfActive)) {
