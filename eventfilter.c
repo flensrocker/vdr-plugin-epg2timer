@@ -1,10 +1,11 @@
 #include "eventfilter.h"
 
 
-epg2timer::cEventFilter::cEventFilter(const char *Name, eFilterActions Action, const cEventFilterBase *Filter)
+epg2timer::cEventFilter::cEventFilter(const char *Name, eFilterActions Action, const char *filename, const cEventFilterBase *Filter)
 {
   _name = Name;
   _action = Action;
+  _filename = filename;
   _filter = Filter;
 }
 
@@ -40,6 +41,11 @@ cTimer *epg2timer::cEventFilter::CreateTimer(const cEvent *event) const
 
   // mark timer
   timer->SetAux(*cString::sprintf("epg2timer=%s", Name()));
+
+  if ((*_filename != NULL) && (**_filename != 0)) {
+     // TODO replace tags with values in _filename
+     //timer->SetFile(filename);
+     }
 
   if (_action == faInactive)
      timer->ClrFlags(tfActive);

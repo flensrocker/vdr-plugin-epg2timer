@@ -203,6 +203,7 @@ bool epg2timer::cFilterTools::LoadFilterFile(const char *FileName, cList<cEventF
          continue;
 
       cEventFilter::eFilterActions action = cEventFilter::faRecord;
+      cString filename;
       cEventFilterBase *filter = NULL;
 
       for (cNestedItem *subitem = subitems->First(); subitem; subitem = subitems->Next(subitem)) {
@@ -226,10 +227,16 @@ bool epg2timer::cFilterTools::LoadFilterFile(const char *FileName, cList<cEventF
                    action = cEventFilter::faInactive;
                 }
              }
+          else if (startswith(line, "filename=")) {
+             cParameterParser filenameParser(line);
+             const char *filenameText = filenameParser.Get("filename");
+             if ((filenameText != NULL) && (*filenameText != 0))
+                filename = filenameText;
+             }
           }
 
       if (filter != NULL)
-         Filters.Add(new cEventFilter(filterName, action, filter));
+         Filters.Add(new cEventFilter(filterName, action, *filename, filter));
       }
 
   return true;

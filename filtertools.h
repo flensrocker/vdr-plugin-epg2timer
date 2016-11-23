@@ -68,11 +68,15 @@ namespace epg2timer
     // # A filter-line starts with "type=".
     // # The default action of a filter is "record".
     // # Possible actions are: record, inactive
+    // # A filename pattern can be set with a "filename=" line.
+    // # Beside %title% and %shorttext% you can use any tag-value from the description.
+    // # Integer values can be formatted with leading zeros like %Staffel:2%.
     //
     // # Create inactive timers for all "Star Trek" events on all channels
     // Star Trek {
     //   type=contains,search=star trek,field=title
     //   action=inactive
+    //   filename=%title%~Staffel_%Staffel:2%~%Staffelfolge:2%_-_%shorttext%
     // }
     // # Record all "Journal" and "Reportage" events on arte.tv
     // ARTE Journal/Reportage {

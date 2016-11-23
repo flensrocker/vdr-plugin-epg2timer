@@ -28,7 +28,7 @@ namespace epg2timer
                           faInactive = 2
                         };
 
-    cEventFilter(const char *Name, eFilterActions Action, const cEventFilterBase *Filter);
+    cEventFilter(const char *Name, eFilterActions Action, const char *filename, const cEventFilterBase *Filter);
     virtual ~cEventFilter(void) {};
     virtual bool Matches(const cEvent *event) const;
 
@@ -42,6 +42,7 @@ namespace epg2timer
   private:
     cString _name;
     eFilterActions _action;
+    cString _filename;
     const cEventFilterBase *_filter;
   };
 
