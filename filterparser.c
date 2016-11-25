@@ -6,6 +6,11 @@
 
 namespace epg2timer
 {
+  static cEventFilterTag::cTagFilter *ParseTagFilter(const char *Text, bool Missing)
+  {
+    return NULL;
+  }
+
   static cEventFilterBase *ParseFilterLine(const char *FilterLine, cList<cNestedItem> *SubItems)
   {
     if ((FilterLine == NULL) || (*FilterLine == 0))
@@ -74,7 +79,28 @@ namespace epg2timer
        return new cEventFilterContains(needle, fields);
        }
     else if (strcmp(type, "tag") == 0) {
-       //return new cEventFilterTag();
+       const char *m = parser.Get("missing");
+       bool missing = (m != NULL) && (strcasecmp(m, "true") == 0);
+
+       cList<cEventFilterTag::cTagFilter> *tagFilters = NULL;
+
+       cString name;
+       for (int i = 0; i < parser.Size(); i++) {
+           const char *value = parser.At(i, name);
+           if ((strcmp(*name, "type") == 0) || (strcmp(*name, "missing") == 0))
+              continue;
+
+           cEventFilterTag::cTagFilter *tagFilter = ParseTagFilter(value, missing);
+           if (tagFilter != NULL) {
+              if (tagFilters == NULL)
+                 tagFilters = new cList<cEventFilterTag::cTagFilter>();
+              tagFilters->Add(tagFilter);
+              }
+           }
+
+       if (tagFilters == NULL)
+          return NULL;
+       return new cEventFilterTag(tagFilters);
        }
     
     return NULL;
