@@ -146,10 +146,10 @@ namespace epg2timer
                                 tfoStrEndswith       = 22
                               };
 
-      cTagFilter(const char *Tag, eTagFilterOperator Op, const char *Comp, bool Missing);
+      cTagFilter(const cFilterContext& Context, const char *Tag, eTagFilterOperator Op, const char *Comp, bool Missing);
       virtual ~cTagFilter(void) {};
 
-      bool Matches(const char *Tag, const char *Value) const;
+      bool Matches(const char *Value) const;
       const char *Tag(void) const { return *_tag; };
 
     private:

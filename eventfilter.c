@@ -1,5 +1,8 @@
 #include "eventfilter.h"
 
+#include "epgtools.h"
+#include "filtercontext.h"
+
 
 epg2timer::cEventFilter::cEventFilter(const char *Name, eFilterActions Action, const char *Filename, const cEventFilterBase *Filter)
 {
@@ -216,7 +219,7 @@ bool epg2timer::cEventFilterContains::Matches(const cFilterContext& Context, con
 }
 
 
-epg2timer::cEventFilterTag::cTagFilter::cTagFilter(const char *Tag, eTagFilterOperator Op, const char *Comp, bool Missing)
+epg2timer::cEventFilterTag::cTagFilter::cTagFilter(const cFilterContext& Context, const char *Tag, eTagFilterOperator Op, const char *Comp, bool Missing)
 {
   _tag = Tag;
   _op = Op;
@@ -234,13 +237,13 @@ epg2timer::cEventFilterTag::cTagFilter::cTagFilter(const char *Tag, eTagFilterOp
         _intComp = (int)StrToNum(Comp);
      }
   else {
-     _strComp = Comp;
-     _strCompLen = strlen(Comp);
+     _strComp = Context.Converter()->Convert(Comp);
+     _strCompLen = strlen(*_strComp);
      }
 }
 
 
-bool epg2timer::cEventFilterTag::cTagFilter::Matches(const char *Tag, const char *Value) const
+bool epg2timer::cEventFilterTag::cTagFilter::Matches(const char *Value) const
 {
   if (_op == tfoInvalid)
      return false;
@@ -272,25 +275,25 @@ bool epg2timer::cEventFilterTag::cTagFilter::Matches(const char *Tag, const char
   else {
      switch (_op) {
        case tfoStrEqual:
-         return (strcasecmp(Value, _strComp) == 0);
+         return (strcmp(Value, _strComp) == 0);
        case tfoStrNotEqual:
-         return (strcasecmp(Value, _strComp) != 0);
+         return (strcmp(Value, _strComp) != 0);
        case tfoStrLesser:
-         return (strcasecmp(Value, _strComp) < 0);
+         return (strcmp(Value, _strComp) < 0);
        case tfoStrLesserOrEqual:
-         return (strcasecmp(Value, _strComp) <= 0);
+         return (strcmp(Value, _strComp) <= 0);
        case tfoStrGreater:
-         return (strcasecmp(Value, _strComp) > 0);
+         return (strcmp(Value, _strComp) > 0);
        case tfoStrGreaterOrEqual:
-         return (strcasecmp(Value, _strComp) >= 0);
+         return (strcmp(Value, _strComp) >= 0);
        case tfoStrIsEmpty:
          return (*Value == 0);
        case tfoStrIsNotEmpty:
          return (*Value != 0);
        case tfoStrContains:
-         return (strcasestr(Value, *_strComp) != NULL);
+         return (strstr(Value, *_strComp) != NULL);
        case tfoStrNotContains:
-         return (strcasestr(Value, *_strComp) == NULL);
+         return (strstr(Value, *_strComp) == NULL);
        case tfoStrStartswith:
          return (strlen(Value) <= _strCompLen) && startswith(*_strComp, Value);
        case tfoStrEndswith:
@@ -308,7 +311,7 @@ epg2timer::cEventFilterTag::cEventFilterTag(cList<cTagFilter> *TagFilters)
 {
   _tagFilters = TagFilters;
   for (const cTagFilter *tf = _tagFilters->First(); tf; tf = _tagFilters->Next(tf))
-      _tagNames.Append(tf->Tag());
+      _tagNames.Append(strdup(tf->Tag()));
 }
 
 
@@ -320,8 +323,18 @@ epg2timer::cEventFilterTag::~cEventFilterTag(void)
 
 bool epg2timer::cEventFilterTag::Matches(const cFilterContext& Context, const cEvent *Event) const
 {
-  for (const cTagFilter *tf = _tagFilters->First(); tf; tf = _tagFilters->Next(tf)) {
-      // TODO
+  if ((Event == NULL) || (_tagFilters->Count() == 0))
+     return false;
+
+  cStringList *values = cEpgTools::ExtractTagValues(_tagNames, Event->Description());
+  int i = 0;
+  for (const cTagFilter *tf = _tagFilters->First(); tf; tf = _tagFilters->Next(tf), i++) {
+      cString value = Context.Converter()->Convert(values->At(i));
+      if (!tf->Matches(*value)) {
+         delete values;
+         return false;
+         }
       }
+  delete values;
   return true;
 }

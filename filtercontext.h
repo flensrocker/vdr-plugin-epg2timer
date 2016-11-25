@@ -12,7 +12,7 @@ namespace epg2timer
     cFilterContext(void);
     ~cFilterContext(void);
 
-    cStringConverter *Converter(void) { return _converter; };
+    cStringConverter *Converter(void) const { return _converter; };
 
   private:
     cStringConverter *_converter;
