@@ -21,7 +21,9 @@ namespace epg2timer
     // "field" is optional, default is "all"
 
     // Tag filter-line:
-    // type=tag,<tagname>=[int|str]<op><value>,<tagname>=[int|str]<op><value>,...
+    // type=tag[,missing=true|false],<tagname>=[int|str]<op><value>,<tagname>=[int|str]<op><value>,...
+    //   missing: default is "false". With "true" a tag matches if it's not present in the description.
+    //            Usefull, if there's a problem with the EPG provider and not all values are given.
     //   int-ops: ==, !=, <, <=, >, >=
     //   str-ops: ==, !=, <, <=, >, >=, empty, notempty, contains, notcontains, startswith, endswith
     //   If multiple tags are given, all must match.
@@ -55,7 +57,8 @@ namespace epg2timer
     // # Possible actions are: record, inactive
     // # A filename pattern can be set with a "filename=" line.
     // # Beside %title% and %shorttext% you can use any tag-value from the description.
-    // # Integer values can be formatted with leading zeros like %Staffel:2%.
+    // # Values can be formatted with leading zeros like %Staffel:2%.
+    // # Custom leading characters can be provided like %Staffel:2,x%.
     //
     // # Create inactive timers for all "Star Trek" events on all channels
     // Star Trek {

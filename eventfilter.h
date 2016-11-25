@@ -146,7 +146,7 @@ namespace epg2timer
                                 tfoStrEndswith       = 22
                               };
 
-      cTagFilter(const char *Tag, eTagFilterOperator Op, const char *Comp);
+      cTagFilter(const char *Tag, eTagFilterOperator Op, const char *Comp, bool Missing);
       virtual ~cTagFilter(void) {};
 
       bool Matches(const char *Tag, const char *Value) const;
@@ -158,6 +158,7 @@ namespace epg2timer
       int _intComp;
       cString _strComp;
       uint _strCompLen;
+      bool _missing;
     };
 
     cEventFilterTag(cList<cTagFilter> *TagFilters);
@@ -166,6 +167,7 @@ namespace epg2timer
 
   private:
     cList<cTagFilter> *_tagFilters;
+    cStringList _tagNames;
   };
 }
 

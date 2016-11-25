@@ -216,13 +216,14 @@ bool epg2timer::cEventFilterContains::Matches(const cFilterContext& Context, con
 }
 
 
-epg2timer::cEventFilterTag::cTagFilter::cTagFilter(const char *Tag, eTagFilterOperator Op, const char *Comp)
+epg2timer::cEventFilterTag::cTagFilter::cTagFilter(const char *Tag, eTagFilterOperator Op, const char *Comp, bool Missing)
 {
   _tag = Tag;
   _op = Op;
   _intComp = 0;
   _strComp = "";
   _strCompLen = 0;
+  _missing = Missing;
 
   if ((*_tag == NULL) || (**_tag == 0))
      _op = tfoInvalid;
@@ -241,8 +242,10 @@ epg2timer::cEventFilterTag::cTagFilter::cTagFilter(const char *Tag, eTagFilterOp
 
 bool epg2timer::cEventFilterTag::cTagFilter::Matches(const char *Tag, const char *Value) const
 {
-  if ((_op == tfoInvalid) || (Value == NULL))
+  if (_op == tfoInvalid)
      return false;
+  if (Value == NULL)
+     return _missing;
 
   if (_op < tfoIsInt) {
      if (!isnumber(Value))
@@ -304,6 +307,8 @@ bool epg2timer::cEventFilterTag::cTagFilter::Matches(const char *Tag, const char
 epg2timer::cEventFilterTag::cEventFilterTag(cList<cTagFilter> *TagFilters)
 {
   _tagFilters = TagFilters;
+  for (const cTagFilter *tf = _tagFilters->First(); tf; tf = _tagFilters->Next(tf))
+      _tagNames.Append(tf->Tag());
 }
 
 
