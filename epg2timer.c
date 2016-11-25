@@ -10,7 +10,7 @@
 
 #include "epgtools.h"
 #include "eventfilter.h"
-#include "filtertools.h"
+#include "filterparser.h"
 #include "timertools.h"
 
 static const char *VERSION        = "0.0.1";
@@ -151,7 +151,7 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
         }
 
      cList<epg2timer::cEventFilter> filters;
-     if (!epg2timer::cFilterTools::LoadFilterFile(Option, filters)) {
+     if (!epg2timer::cFilterParser::LoadFilterFile(Option, filters)) {
         ReplyCode = 501;
         return cString::sprintf("Error in file %s", Option);
         }
