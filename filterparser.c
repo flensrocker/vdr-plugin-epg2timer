@@ -1,17 +1,114 @@
 #include "filterparser.h"
 
 #include "eventfilter.h"
+#include "filtercontext.h"
 #include "parameterparser.h"
 
 
 namespace epg2timer
 {
-  static cEventFilterTag::cTagFilter *ParseTagFilter(const char *Text, bool Missing)
+  static cEventFilterTag::cTagFilter *ParseTagFilter(const cFilterContext& Context, const char *Tag, const char *Value, bool Missing)
   {
-    return NULL;
+    if ((Tag == NULL) || (*Tag == 0) || (Value == NULL) || (*Value == 0))
+       return NULL;
+
+    int valueLen = strlen(Value);
+    if (valueLen < 5)
+       return NULL;
+
+    cEventFilterTag::cTagFilter::eTagFilterOperator op = cEventFilterTag::cTagFilter::tfoInvalid;
+    cString comp;
+
+    // parse longest operators first!
+    if (startswith(Value, "int")) {
+       int compOffset = 5;
+       if (startswith(Value + 3, "==")) {
+          op = cEventFilterTag::cTagFilter::tfoIntEqual;
+          }
+       else if (startswith(Value + 3, "!=")) {
+          op = cEventFilterTag::cTagFilter::tfoIntNotEqual;
+          }
+       else if (startswith(Value + 3, "<=")) {
+          op = cEventFilterTag::cTagFilter::tfoIntLesserOrEqual;
+          }
+       else if (startswith(Value + 3, ">=")) {
+          op = cEventFilterTag::cTagFilter::tfoIntGreaterOrEqual;
+          }
+       else if (startswith(Value + 3, "<")) {
+          op = cEventFilterTag::cTagFilter::tfoIntLesser;
+          compOffset = 4;
+          }
+       else if (startswith(Value + 3, ">")) {
+          op = cEventFilterTag::cTagFilter::tfoIntGreater;
+          compOffset = 4;
+          }
+       else {
+          esyslog("epg2timer: invalid tag operator in %s", Value);
+          return NULL;
+          }
+       comp = cString(skipspace(Value + compOffset));
+       }
+    else if (startswith(Value, "str")) {
+       int compOffset = 5;
+       if (startswith(Value + 3, "notcontains")) {
+          op = cEventFilterTag::cTagFilter::tfoStrNotContains;
+          compOffset = 14;
+          }
+       else if (startswith(Value + 3, "startswith")) {
+          op = cEventFilterTag::cTagFilter::tfoStrStartswith;
+          compOffset = 13;
+          }
+       else if (startswith(Value + 3, "notempty")) {
+          op = cEventFilterTag::cTagFilter::tfoStrIsNotEmpty;
+          compOffset = 11;
+          }
+       else if (startswith(Value + 3, "contains")) {
+          op = cEventFilterTag::cTagFilter::tfoStrContains;
+          compOffset = 11;
+          }
+       else if (startswith(Value + 3, "endswith")) {
+          op = cEventFilterTag::cTagFilter::tfoStrEndswith;
+          compOffset = 11;
+          }
+       else if (startswith(Value + 3, "empty")) {
+          op = cEventFilterTag::cTagFilter::tfoStrIsEmpty;
+          compOffset = 8;
+          }
+       else if (startswith(Value + 3, "==")) {
+          op = cEventFilterTag::cTagFilter::tfoStrEqual;
+          }
+       else if (startswith(Value + 3, "!=")) {
+          op = cEventFilterTag::cTagFilter::tfoStrNotEqual;
+          }
+       else if (startswith(Value + 3, "<=")) {
+          op = cEventFilterTag::cTagFilter::tfoStrLesserOrEqual;
+          }
+       else if (startswith(Value + 3, ">=")) {
+          op = cEventFilterTag::cTagFilter::tfoStrGreaterOrEqual;
+          }
+       else if (startswith(Value + 3, "<")) {
+          op = cEventFilterTag::cTagFilter::tfoStrLesser;
+          compOffset = 4;
+          }
+       else if (startswith(Value + 3, ">")) {
+          op = cEventFilterTag::cTagFilter::tfoStrGreater;
+          compOffset = 4;
+          }
+       else {
+          esyslog("epg2timer: invalid tag operator in %s", Value);
+          return NULL;
+          }
+       comp = Context.Converter()->Convert(skipspace(Value + compOffset));
+       }
+    else {
+       esyslog("epg2timer: invalid tag type in %s", Value);
+       return NULL;
+       }
+
+    return new cEventFilterTag::cTagFilter(Context, Tag, op, *comp, Missing);
   }
 
-  static cEventFilterBase *ParseFilterLine(const char *FilterLine, cList<cNestedItem> *SubItems)
+  static cEventFilterBase *ParseFilterLine(const cFilterContext& Context, const char *FilterLine, cList<cNestedItem> *SubItems)
   {
     if ((FilterLine == NULL) || (*FilterLine == 0))
        return NULL;
@@ -25,7 +122,7 @@ namespace epg2timer
        else {
           cList<cEventFilterBase> *subFilters = NULL;
           for (cNestedItem *si = SubItems->First(); si; si = SubItems->Next(si)) {
-              cEventFilterBase *subFilter = ParseFilterLine(si->Text(), si->SubItems());
+              cEventFilterBase *subFilter = ParseFilterLine(Context, si->Text(), si->SubItems());
               if (subFilter != NULL) {
                  if (subFilters == NULL)
                     subFilters = new cList<cEventFilterBase>();
@@ -84,13 +181,13 @@ namespace epg2timer
 
        cList<cEventFilterTag::cTagFilter> *tagFilters = NULL;
 
-       cString name;
+       cString tag;
        for (int i = 0; i < parser.Size(); i++) {
-           const char *value = parser.At(i, name);
-           if ((strcmp(*name, "type") == 0) || (strcmp(*name, "missing") == 0))
+           const char *value = parser.At(i, tag);
+           if ((strcmp(*tag, "type") == 0) || (strcmp(*tag, "missing") == 0))
               continue;
 
-           cEventFilterTag::cTagFilter *tagFilter = ParseTagFilter(value, missing);
+           cEventFilterTag::cTagFilter *tagFilter = ParseTagFilter(Context, *tag, value, missing);
            if (tagFilter != NULL) {
               if (tagFilters == NULL)
                  tagFilters = new cList<cEventFilterTag::cTagFilter>();
@@ -138,7 +235,7 @@ bool epg2timer::cFilterParser::LoadFilterFile(const cFilterContext& Context, con
              if (filter != NULL)
                 esyslog("epg2timer, load filters: multiple types");
              else
-                filter = ParseFilterLine(line, subitem->SubItems());
+                filter = ParseFilterLine(Context, line, subitem->SubItems());
              }
           else if (startswith(line, "action=")) {
              cParameterParser actionParser(line);
