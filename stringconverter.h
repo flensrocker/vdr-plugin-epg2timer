@@ -13,7 +13,7 @@ namespace epg2timer
     cStringConverter(void);
     ~cStringConverter(void);
 
-    cString Convert(const char *text) const;
+    cString Convert(const char *Text) const;
 
   private:
     UErrorCode _status;

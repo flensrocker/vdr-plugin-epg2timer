@@ -17,9 +17,9 @@ epg2timer::cStringConverter::~cStringConverter(void)
 }
 
 
-cString epg2timer::cStringConverter::Convert(const char *text) const
+cString epg2timer::cStringConverter::Convert(const char *Text) const
 {
-  UnicodeString source = UnicodeString::fromUTF8(StringPiece(text));
+  UnicodeString source = UnicodeString::fromUTF8(StringPiece(Text));
   _converter->transliterate(source);
   // TODO check status
   std::string result;

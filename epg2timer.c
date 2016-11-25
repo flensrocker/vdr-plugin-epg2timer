@@ -10,6 +10,7 @@
 
 #include "epgtools.h"
 #include "eventfilter.h"
+#include "filtercontext.h"
 #include "filterparser.h"
 #include "timertools.h"
 
@@ -150,8 +151,9 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
         return "Missing filename";
         }
 
+     epg2timer::cFilterContext context;
      cList<epg2timer::cEventFilter> filters;
-     if (!epg2timer::cFilterParser::LoadFilterFile(Option, filters)) {
+     if (!epg2timer::cFilterParser::LoadFilterFile(context, Option, filters)) {
         ReplyCode = 501;
         return cString::sprintf("Error in file %s", Option);
         }
@@ -180,7 +182,7 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
                for (const cEvent *e = events->First(); e; e = events->Next(e)) {
                    eventCount++;
                    for (const epg2timer::cEventFilter *filter = filters.First(); filter; filter = filters.Next(filter)) {
-                       if (filter->Matches(e)) {
+                       if (filter->Matches(context, e)) {
                           foundCount++;
                           msg = cString::sprintf("%s\nFilter: %s\n(%u) %s: %s", *msg, filter->Name(), e->EventID(), *TimeToString(e->StartTime()), e->Title());
                           if (hasTimerWriteLock) {

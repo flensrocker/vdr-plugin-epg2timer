@@ -9,7 +9,7 @@ namespace epg2timer
   class cEpgTools
   {
   public:
-    static cStringList *ExtractTagValues(const cStringList &tags, const char *description);
+    static cStringList *ExtractTagValues(const cStringList &Tags, const char *Description);
   };
 }
 

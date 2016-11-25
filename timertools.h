@@ -8,7 +8,7 @@ namespace epg2timer
   class cTimerTools
   {
   public:
-    static cTimer *FindTimer(cTimers *timers, const cSchedules *schedules, const cEvent *event);
+    static cTimer *FindTimer(cTimers *Timers, const cSchedules *Schedules, const cEvent *Event);
   };
 }
 

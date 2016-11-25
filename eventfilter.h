@@ -6,6 +6,8 @@
 
 namespace epg2timer
 {
+  class cFilterContext;
+
   class cEventFilterBase : public cListObject
   {
   public:
@@ -17,7 +19,7 @@ namespace epg2timer
 
     cEventFilterBase(void) {};
     virtual ~cEventFilterBase(void) {};
-    virtual bool Matches(const cEvent *event) const = 0;
+    virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const = 0;
   };
 
   // Type returned by the filter file parser
@@ -28,16 +30,16 @@ namespace epg2timer
                           faInactive = 2
                         };
 
-    cEventFilter(const char *Name, eFilterActions Action, const char *filename, const cEventFilterBase *Filter);
+    cEventFilter(const char *Name, eFilterActions Action, const char *Filename, const cEventFilterBase *Filter);
     virtual ~cEventFilter(void) {};
-    virtual bool Matches(const cEvent *event) const;
+    virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const;
 
     const char *Name() const;
     eFilterActions Action() const;
 
-    bool AuxMatches(const cTimer *timer) const;
-    cTimer *CreateTimer(const cEvent *event) const;
-    bool UpdateTimer(cTimer *timer, const cEvent *event) const;
+    bool AuxMatches(const cTimer *Timer) const;
+    cTimer *CreateTimer(const cEvent *Event) const;
+    bool UpdateTimer(cTimer *Timer, const cEvent *Event) const;
 
   private:
     cString _name;
@@ -51,9 +53,9 @@ namespace epg2timer
   class cEventFilterList : public cEventFilterBase
   {
   public:
-    cEventFilterList(cList<cEventFilterBase> *filters);
+    cEventFilterList(cList<cEventFilterBase> *Filters);
     virtual ~cEventFilterList(void);
-    virtual bool Matches(const cEvent *event) const;
+    virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const;
 
   protected:
     cList<cEventFilterBase> *_filters;
@@ -64,9 +66,9 @@ namespace epg2timer
   {
   public:
     // cEventFilterAnd will take control over "filters"
-    cEventFilterAnd(cList<cEventFilterBase> *filters);
+    cEventFilterAnd(cList<cEventFilterBase> *Filters);
     virtual ~cEventFilterAnd(void) {};
-    virtual bool Matches(const cEvent *event) const;
+    virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const;
   };
 
   // at least one filter in the list must match
@@ -74,9 +76,9 @@ namespace epg2timer
   {
   public:
     // cEventFilterOr will take control over "filters"
-    cEventFilterOr(cList<cEventFilterBase> *filters);
+    cEventFilterOr(cList<cEventFilterBase> *Filters);
     virtual ~cEventFilterOr(void) {};
-    virtual bool Matches(const cEvent *event) const;
+    virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const;
   };
 
   // The event must belong to a channel between fromChannel and toChannel.
@@ -88,9 +90,9 @@ namespace epg2timer
   class cEventFilterChannel : public cEventFilterBase
   {
   public:
-    cEventFilterChannel(tChannelID fromChannel, tChannelID toChannel);
+    cEventFilterChannel(tChannelID FromChannel, tChannelID ToChannel);
     virtual ~cEventFilterChannel(void) {};
-    virtual bool Matches(const cEvent *event) const;
+    virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const;
 
   private:
     tChannelID _fromChannel;
@@ -105,15 +107,15 @@ namespace epg2timer
   class cEventFilterContains : public cEventFilterBase
   {
   public:
-    cEventFilterContains(const char *needle, int fields);
+    cEventFilterContains(const char *Needle, int Fields);
     virtual ~cEventFilterContains(void) {};
-    virtual bool Matches(const cEvent *event) const;
+    virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const;
 
   private:
     cString _needle;
     int _fields;
 
-    bool Matches(const char *text) const;
+    bool Matches(const cFilterContext& Context, const char *Text) const;
   };
 
   class cEventFilterTag : public cEventFilterBase
@@ -144,10 +146,10 @@ namespace epg2timer
                                 tfoStrEndswith       = 22
                               };
 
-      cTagFilter(const char *tag, eTagFilterOperator op, const char *comp);
+      cTagFilter(const char *Tag, eTagFilterOperator Op, const char *Comp);
       virtual ~cTagFilter(void) {};
 
-      bool Matches(const char *tag, const char *value) const;
+      bool Matches(const char *Tag, const char *Value) const;
       const char *Tag(void) const { return *_tag; };
 
     private:
@@ -158,9 +160,9 @@ namespace epg2timer
       uint _strCompLen;
     };
 
-    cEventFilterTag(cList<cTagFilter> *tagFilters);
+    cEventFilterTag(cList<cTagFilter> *TagFilters);
     virtual ~cEventFilterTag(void);
-    virtual bool Matches(const cEvent *event) const;
+    virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const;
 
   private:
     cList<cTagFilter> *_tagFilters;

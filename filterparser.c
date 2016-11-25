@@ -82,12 +82,12 @@ namespace epg2timer
 }
 
 
-bool epg2timer::cFilterParser::LoadFilterFile(const char *FileName, cList<cEventFilter> &Filters)
+bool epg2timer::cFilterParser::LoadFilterFile(const cFilterContext& Context, const char *Filename, cList<cEventFilter> &Filters)
 {
   Filters.Clear();
 
   cNestedItemList filters;
-  if (!filters.Load(FileName))
+  if (!filters.Load(Filename))
      return false;
 
   for (cNestedItem *item = filters.First(); item; item = filters.Next(item)) {

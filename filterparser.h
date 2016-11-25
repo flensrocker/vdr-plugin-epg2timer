@@ -7,6 +7,7 @@ namespace epg2timer
 {
   class cEventFilterBase;
   class cEventFilter;
+  class cFilterContext;
 
   class cFilterParser
   {
@@ -73,7 +74,7 @@ namespace epg2timer
     //   }
     //   action=record
     // }
-    static bool LoadFilterFile(const char *FileName, cList<cEventFilter> &Filters);
+    static bool LoadFilterFile(const cFilterContext& Context, const char *Filename, cList<cEventFilter> &Filters);
   };
 }
 
