@@ -48,7 +48,7 @@ SOFILE = libvdr-$(PLUGIN).so
 ### Includes and Defines (add further entries here):
 
 INCLUDES += $(shell pkg-config --cflags icu-uc icu-io)
-LDFLAGS += $(shell pkg-config --libs icu-uc icu-io)
+LDADD = $(shell pkg-config --libs icu-uc icu-io)
 
 DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 
@@ -103,7 +103,7 @@ install-i18n: $(I18Nmsgs)
 ### Targets:
 
 $(SOFILE): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) -o $@ $(LDADD)
 
 install-lib: $(SOFILE)
 	install -D $^ $(DESTDIR)$(LIBDIR)/$^.$(APIVERSION)

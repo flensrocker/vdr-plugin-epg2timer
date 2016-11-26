@@ -1,8 +1,13 @@
 #ifndef epg2timer_stringconverter_h
 #define epg2timer_stringconverter_h
 
-#include <vdr/tools.h>
+#include <unicode/uconfig.h>
+#include <unicode/platform.h>
+#include <unicode/utypes.h>
+#include <unicode/unistr.h>
 #include <unicode/translit.h>
+
+#include <vdr/tools.h>
 
 
 namespace epg2timer
@@ -17,7 +22,7 @@ namespace epg2timer
 
   private:
     UErrorCode _status;
-    Transliterator *_converter;
+    icu::Transliterator *_converter;
   };
 }
 
