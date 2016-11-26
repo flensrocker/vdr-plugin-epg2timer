@@ -7,7 +7,6 @@ epg2timer::cParameterParser::cParameterParser(const char *Parameters)
      char *s = strdup(Parameters);
      size_t len = strlen(Parameters);
      size_t pos1 = 0;
-     dsyslog("epg2timer, parameter parser: parameters = '%s'", s);
      // skip initial commas
      while ((pos1 < len) && (s[pos1] == ','))
            pos1++;
@@ -23,16 +22,13 @@ epg2timer::cParameterParser::cParameterParser(const char *Parameters)
               }
            if ((s[pos2] == ',') && (s[pos2 - 1] != '\\')) {
               s[pos2] = 0;
-              dsyslog("epg2timer, parameter parser: add '%s'", s + pos1);
               _list.Append(strdup(s + pos1));
               pos1 = pos2 + 1;
               }
            pos2++;
            }
-     if (pos2 > pos1) {
-        dsyslog("epg2timer, parameter parser: add '%s'", s + pos1);
+     if (pos2 > pos1)
         _list.Append(strdup(s + pos1));
-        }
      free(s);
      }
 }
@@ -54,10 +50,8 @@ const char *epg2timer::cParameterParser::Get(const char *Name, int Number) const
       if (len > name_len) {
          if ((strncmp(text, Name, name_len) == 0) && (text[name_len] == '=')) {
             Number--;
-            if (Number < 0) {
-               dsyslog("epg2timer, parameter parser: found parameter '%s'", text);
+            if (Number < 0)
                return text + name_len + 1;
-               }
             }
          }
       }

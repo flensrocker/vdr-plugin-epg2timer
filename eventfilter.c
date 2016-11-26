@@ -1,6 +1,7 @@
 #include "eventfilter.h"
 
 #include "epgtools.h"
+#include "filenametools.h"
 #include "filtercontext.h"
 
 
@@ -52,13 +53,12 @@ cTimer *epg2timer::cEventFilter::CreateTimer(const cEvent *Event) const
   // mark timer
   timer->SetAux(*cString::sprintf("epg2timer=%s", Name()));
 
-  if ((*_filename != NULL) && (**_filename != 0)) {
-     // TODO replace tags with values in _filename
-     //timer->SetFile(filename);
-     }
+  if ((*_filename != NULL) && (**_filename != 0))
+     timer->SetFile(*cFilenameTools::ReplaceTags(*_filename, Event));
 
   if (_action == faInactive)
      timer->ClrFlags(tfActive);
+
   return timer;
 }
 
@@ -68,9 +68,17 @@ bool epg2timer::cEventFilter::UpdateTimer(cTimer *Timer, const cEvent *Event) co
   if (!AuxMatches(Timer))
      return false;
 
+  bool updated = false;
   // active flag should not be updated, it's under the user's control
+  if ((*_filename != NULL) && (**_filename != 0)) {
+     cString filename = cFilenameTools::ReplaceTags(*_filename, Event);
+     if (strcmp(*filename, Timer->File()) != 0) {
+        Timer->SetFile(*filename);
+        updated = true;
+        }
+     }
 
-  return false;
+  return updated;
 }
 
 
@@ -334,7 +342,7 @@ bool epg2timer::cEventFilterTag::Matches(const cFilterContext& Context, const cE
   if ((Event == NULL) || (_tagFilters->Count() == 0))
      return false;
 
-  cStringList *values = cEpgTools::ExtractTagValues(_tagNames, Event->Description());
+  cStringList *values = cEpgTools::ExtractTagValues(_tagNames, Event);
   if (values == NULL)
      return _missing;
 

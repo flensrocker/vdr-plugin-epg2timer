@@ -1,16 +1,18 @@
 #include "epgtools.h"
 
 
-cStringList *epg2timer::cEpgTools::ExtractTagValues(const cStringList &Tags, const char *Description)
+cStringList *epg2timer::cEpgTools::ExtractTagValues(const cStringList &Tags, const cEvent *Event)
 {
-  if ((Description == NULL) || (*Description == 0))
+  if ((Event == NULL) || (Event->Description() == NULL) || (*(Event->Description()) == 0))
      return NULL;
+
+  const char *description = Event->Description();
 
   cVector<int> lines;
   lines.Append(0);
-  int len = strlen(Description) - 1; // ignore last newline if present
+  int len = strlen(description) - 1; // ignore last newline if present
   for (int pos = 0; pos < len; pos++) {
-      if (Description[pos] == '\n')
+      if (description[pos] == '\n')
          lines.Append(pos + 1);
       }
   lines.Append(len + 1);
@@ -21,19 +23,23 @@ cStringList *epg2timer::cEpgTools::ExtractTagValues(const cStringList &Tags, con
       const char *tag = Tags[i];
       if ((tag == NULL) || (*tag == 0))
          values->Append(NULL);
+      else if (strcasecmp(tag, "title") == 0)
+         values->Append(strdup(Event->Title()));
+      else if (strcasecmp(tag, "shorttext") == 0)
+         values->Append(strdup(Event->ShortText()));
       else {
          bool found = false;
          int tagLen = strlen(tag);
          for (int l = 0; l < lines.Size() - 1; l++) {
              int lineLen = lines[l + 1] - lines[l];
              if ((lineLen > tagLen + 1)
-             && startswith(Description + lines[l], tag)
-             && (Description[tagLen] == ':')) {
+             && startswith(description + lines[l], tag)
+             && (description[lines[l] + tagLen] == ':')) {
                 int vPos = lines[l] + tagLen + 1;
-                while ((vPos < lines[l + 1]) && (Description[vPos] == ' '))
+                while ((vPos < lines[l + 1]) && (description[vPos] == ' '))
                       vPos++;
                 if (vPos < lines[l + 1]) {
-                   cString tmp(Description + vPos, Description + lines[l + 1] - 1);
+                   cString tmp(description + vPos, description + lines[l + 1] - 1);
                    values->Append(strdup(*tmp));
                    found = true;
                 }
