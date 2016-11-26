@@ -22,7 +22,7 @@ namespace epg2timer
     virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const = 0;
   };
 
-  // Type returned by the filter file parser
+  // Type returned by the file parser.
   class cEventFilter : public cEventFilterBase
   {
   public:
@@ -48,8 +48,8 @@ namespace epg2timer
     const cEventFilterBase *_filter;
   };
 
-  // base class for "and" and "or" filter
-  // cleans up the filter list
+  // Base class for "And" and "Or" filter.
+  // Deletes the provided "Filters" list.
   class cEventFilterList : public cEventFilterBase
   {
   public:
@@ -61,32 +61,30 @@ namespace epg2timer
     cList<cEventFilterBase> *_filters;
   };
 
-  // all filters in the list must match
+  // All filters in the list must match.
   class cEventFilterAnd : public cEventFilterList
   {
   public:
-    // cEventFilterAnd will take control over "filters"
     cEventFilterAnd(cList<cEventFilterBase> *Filters);
     virtual ~cEventFilterAnd(void) {};
     virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const;
   };
 
-  // at least one filter in the list must match
+  // At least one filter in the list must match.
   class cEventFilterOr : public cEventFilterList
   {
   public:
-    // cEventFilterOr will take control over "filters"
     cEventFilterOr(cList<cEventFilterBase> *Filters);
     virtual ~cEventFilterOr(void) {};
     virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const;
   };
 
-  // The event must belong to a channel between fromChannel and toChannel.
+  // The event must belong to a channel between FromChannel and ToChannel.
   // The channel numbers are used for comparison.
-  // If fromChannel is the invalid channel-id, all channels with numbers up
-  // to toChannel's number match.
-  // If toChannel is the invalid channel-id, all channels with numbers
-  // from fromChannel's number match.
+  // If FromChannel is the invalid channel-id, all channels with numbers up
+  // to ToChannel's number match.
+  // If ToChannel is the invalid channel-id, all channels with numbers
+  // from FromChannel's number match.
   class cEventFilterChannel : public cEventFilterBase
   {
   public:
@@ -99,11 +97,7 @@ namespace epg2timer
     tChannelID _toChannel;
   };
 
-  // Matches, if the title, shorttext or description contains
-  // the given text.
-  // TODO
-  // - remove special characters from needle and text like '" etc.
-  //   to stabilize matching
+  // Matches, if the title, shorttext or description contains the given text.
   class cEventFilterContains : public cEventFilterBase
   {
   public:

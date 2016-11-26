@@ -62,7 +62,7 @@ bool epg2timer::cEventFilter::UpdateTimer(cTimer *Timer, const cEvent *Event) co
   if (!AuxMatches(Timer))
      return updated;
 
-  // active flag should not be updated, it's under the user's control
+  // active flag must not be updated, it's under the user's control
 
   // update filename if tags in description are updated
   if ((*_filename != NULL) && (**_filename != 0)) {
