@@ -173,7 +173,7 @@ namespace epg2timer
                  }
               }
           }
-       return new cEventFilterContains(needle, fields);
+       return new cEventFilterContains(Context, needle, fields);
        }
     else if (strcmp(type, "tag") == 0) {
        const char *m = parser.Get("missing");
@@ -197,7 +197,7 @@ namespace epg2timer
 
        if (tagFilters == NULL)
           return NULL;
-       return new cEventFilterTag(tagFilters);
+       return new cEventFilterTag(tagFilters, missing);
        }
     
     return NULL;

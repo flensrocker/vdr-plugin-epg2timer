@@ -190,9 +190,9 @@ bool epg2timer::cEventFilterChannel::Matches(const cFilterContext& Context, cons
 }
 
 
-epg2timer::cEventFilterContains::cEventFilterContains(const char *Needle, int Fields)
+epg2timer::cEventFilterContains::cEventFilterContains(const cFilterContext& Context, const char *Needle, int Fields)
 {
-  _needle = Needle;
+  _needle = Context.Converter()->Convert(Needle);
   _fields = Fields;
 }
 
@@ -214,8 +214,8 @@ bool epg2timer::cEventFilterContains::Matches(const cFilterContext& Context, con
 {
   if ((Text == NULL) || (*Text == 0))
      return false;
-  // TODO remove special characters like '" etc. to get better match
-  return (strcasestr(Text, *_needle) != NULL);
+  cString t = Context.Converter()->Convert(Text);
+  return (strcasestr(t, *_needle) != NULL);
 }
 
 
@@ -307,9 +307,10 @@ bool epg2timer::cEventFilterTag::cTagFilter::Matches(const char *Value) const
 }
 
 
-epg2timer::cEventFilterTag::cEventFilterTag(cList<cTagFilter> *TagFilters)
+epg2timer::cEventFilterTag::cEventFilterTag(cList<cTagFilter> *TagFilters, bool Missing)
 {
   _tagFilters = TagFilters;
+  _missing = Missing;
   for (const cTagFilter *tf = _tagFilters->First(); tf; tf = _tagFilters->Next(tf))
       _tagNames.Append(strdup(tf->Tag()));
 }
@@ -327,6 +328,9 @@ bool epg2timer::cEventFilterTag::Matches(const cFilterContext& Context, const cE
      return false;
 
   cStringList *values = cEpgTools::ExtractTagValues(_tagNames, Event->Description());
+  if (values == NULL)
+     return _missing;
+
   int i = 0;
   for (const cTagFilter *tf = _tagFilters->First(); tf; tf = _tagFilters->Next(tf), i++) {
       cString value = Context.Converter()->Convert(values->At(i));

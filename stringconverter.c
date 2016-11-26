@@ -16,6 +16,9 @@ epg2timer::cStringConverter::~cStringConverter(void)
 
 cString epg2timer::cStringConverter::Convert(const char *Text) const
 {
+  if (Text == NULL)
+     return cString(NULL);
+
   // TODO non UTF8 systems
   icu::UnicodeString source = icu::UnicodeString::fromUTF8(icu::StringPiece(Text));
   _converter->transliterate(source);

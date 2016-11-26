@@ -107,7 +107,7 @@ namespace epg2timer
   class cEventFilterContains : public cEventFilterBase
   {
   public:
-    cEventFilterContains(const char *Needle, int Fields);
+    cEventFilterContains(const cFilterContext& Context, const char *Needle, int Fields);
     virtual ~cEventFilterContains(void) {};
     virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const;
 
@@ -161,12 +161,13 @@ namespace epg2timer
       bool _missing;
     };
 
-    cEventFilterTag(cList<cTagFilter> *TagFilters);
+    cEventFilterTag(cList<cTagFilter> *TagFilters, bool Missing);
     virtual ~cEventFilterTag(void);
     virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const;
 
   private:
     cList<cTagFilter> *_tagFilters;
+    bool _missing;
     cStringList _tagNames;
   };
 }
