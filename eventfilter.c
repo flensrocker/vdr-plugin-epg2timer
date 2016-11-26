@@ -34,6 +34,13 @@ bool epg2timer::cEventFilter::AuxMatches(const cTimer *Timer) const
   if ((aux == NULL) || (strlen(aux) < 10) || !startswith(aux, "epg2timer="))
      return false;
 
+  // workaround for epgd's xml-tags
+  const char *epgd = strstr(aux, "<epgd>");
+  if (epgd != NULL) {
+     cString tmpAux(aux, epgd);
+     return (strcasecmp(*_name, tmpAux + 10) == 0);
+     }
+
   return (strcasecmp(*_name, aux + 10) == 0);
 }
 
