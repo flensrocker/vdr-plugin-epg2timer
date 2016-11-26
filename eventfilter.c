@@ -32,17 +32,10 @@ const char *epg2timer::cEventFilter::Name() const
 bool epg2timer::cEventFilter::AuxMatches(const cTimer *Timer) const
 {
   const char *aux = Timer->Aux();
-  if ((aux == NULL) || (strlen(aux) < 10) || !startswith(aux, "epg2timer="))
+  if ((aux == NULL) || (strlen(aux) < 11) || !startswith(aux, "epg2timer="))
      return false;
 
-  // workaround for epgd's xml-tags
-  const char *epgd = strstr(aux, "<epgd>");
-  if (epgd != NULL) {
-     cString tmpAux(aux, epgd);
-     return (strcasecmp(*_name, tmpAux + 10) == 0);
-     }
-
-  return (strcasecmp(*_name, aux + 10) == 0);
+  return startswith(aux + 10, *cString::sprintf("%s{", *_name));
 }
 
 
@@ -50,8 +43,8 @@ cTimer *epg2timer::cEventFilter::CreateTimer(const cEvent *Event) const
 {
   cTimer *timer = new cTimer(Event);
 
-  // mark timer
-  timer->SetAux(*cString::sprintf("epg2timer=%s", Name()));
+  // mark as epg2timer-timer
+  timer->SetAux(*cString::sprintf("epg2timer=%s{", Name()));
 
   if ((*_filename != NULL) && (**_filename != 0))
      timer->SetFile(*cFilenameTools::ReplaceTags(*_filename, Event));
@@ -65,11 +58,13 @@ cTimer *epg2timer::cEventFilter::CreateTimer(const cEvent *Event) const
 
 bool epg2timer::cEventFilter::UpdateTimer(cTimer *Timer, const cEvent *Event) const
 {
-  if (!AuxMatches(Timer))
-     return false;
-
   bool updated = false;
+  if (!AuxMatches(Timer))
+     return updated;
+
   // active flag should not be updated, it's under the user's control
+
+  // update filename if tags in description are updated
   if ((*_filename != NULL) && (**_filename != 0)) {
      cString filename = cFilenameTools::ReplaceTags(*_filename, Event);
      if (strcmp(*filename, Timer->File()) != 0) {
@@ -77,6 +72,8 @@ bool epg2timer::cEventFilter::UpdateTimer(cTimer *Timer, const cEvent *Event) co
         updated = true;
         }
      }
+
+  // TODO adjust start- and endtime
 
   return updated;
 }
