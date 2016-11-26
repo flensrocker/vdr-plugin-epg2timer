@@ -59,6 +59,7 @@ namespace epg2timer
     // # Beside %title% and %shorttext% you can use any tag-value from the description.
     // # Values can be formatted with leading zeros like %Staffel:2%.
     // # Custom leading characters can be provided like %Staffel:2,x%.
+    // # TODO custom margin start/stop, priority, lifetime
     //
     // # Create inactive timers for all "Star Trek" events on all channels
     // Star Trek {

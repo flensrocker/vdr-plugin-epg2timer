@@ -68,12 +68,42 @@ bool epg2timer::cEventFilter::UpdateTimer(cTimer *Timer, const cEvent *Event) co
   if ((*_filename != NULL) && (**_filename != 0)) {
      cString filename = cFilenameTools::ReplaceTags(*_filename, Event);
      if (strcmp(*filename, Timer->File()) != 0) {
+        dsyslog("epg2timer: adjust filename from %s to %s", Timer->File(), *filename);
         Timer->SetFile(*filename);
         updated = true;
         }
      }
 
-  // TODO adjust start- and endtime
+  // copied from cTimer's constructor
+  time_t tstart = Timer->HasFlags(tfVps) ? Event->Vps() : Event->StartTime();
+  time_t tstop = tstart + Event->Duration();
+  if (!(Timer->HasFlags(tfVps))) {
+     tstart -= Setup.MarginStart * 60;
+     tstop  += Setup.MarginStop * 60;
+     }
+  struct tm tm_r;
+  struct tm *time = localtime_r(&tstart, &tm_r);
+  time_t day = cTimer::SetTime(tstart, 0);
+  int start = time->tm_hour * 100 + time->tm_min;
+  time = localtime_r(&tstop, &tm_r);
+  int stop = time->tm_hour * 100 + time->tm_min;
+  if (stop >= 2400)
+     stop -= 2400;
+  if (Timer->Start() != start) {
+     dsyslog("epg2timer: adjust start from %d to %d", Timer->Start(), start);
+     Timer->SetStart(start);
+     updated = true;
+     }
+  if (Timer->Stop() != stop) {
+     dsyslog("epg2timer: adjust stop from %d to %d", Timer->Stop(), stop);
+     Timer->SetStop(stop);
+     updated = true;
+     }
+  if (Timer->Day() != day) {
+     dsyslog("epg2timer: adjust day from %d to %d", Timer->Day(), day);
+     Timer->SetDay(day);
+     updated = true;
+     }
 
   return updated;
 }
