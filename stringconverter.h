@@ -21,6 +21,7 @@ namespace epg2timer
     cString Convert(const char *Text) const;
 
   private:
+    bool _systemIsUtf8;
     UErrorCode _status;
     icu::Transliterator *_converter;
   };
