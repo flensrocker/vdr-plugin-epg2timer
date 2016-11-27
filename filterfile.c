@@ -210,11 +210,63 @@ namespace epg2timer
 
 epg2timer::cFilterFile *epg2timer::cFilterFile::Load(const char *Filename)
 {
-  cNestedItemList filters;
-  if (!filters.Load(Filename))
-     return NULL;
-
   cFilterFile *filterFile = new cFilterFile(Filename);
+
+  if (!filterFile->Load()) {
+     delete filterFile;
+     return NULL;
+     }
+
+  return filterFile;
+}
+
+
+epg2timer::cFilterFile::cFilterFile(const char *Filename)
+{
+  _filename = Filename;
+  _lastModTime = LastModifiedTime(Filename);
+  _context = new cFilterContext();
+  _filters = new cList<cEventFilter>();
+
+  SetDescription("epg2timer-update");
+}
+
+
+epg2timer::cFilterFile::~cFilterFile(void)
+{
+  Cancel(5);
+  delete _filters;
+  delete _context;
+}
+
+
+void epg2timer::cFilterFile::UpdateTimers(void)
+{
+  time_t modTime = LastModifiedTime(*_filename);
+  if (modTime == 0)
+     esyslog("epg2timer: can't get last modified time of %s", *_filename);
+  else if (_lastModTime != modTime) {
+     isyslog("epg2timer: reloading file %s", *_filename);
+     _lastModTime = modTime;
+     if (!Load())
+        esyslog("epg2timer: can't reload file %s, keeping current filters", *_filename);
+     }
+
+  Start();
+}
+
+
+bool epg2timer::cFilterFile::Load(void)
+{
+  Lock();
+
+  cNestedItemList filters;
+  if (!filters.Load(*_filename))
+     return false;
+
+  cFilterContext *newContext = new cFilterContext();
+  cList<cEventFilter> *newFilters = new cList<cEventFilter>();
+
   for (cNestedItem *item = filters.First(); item; item = filters.Next(item)) {
       cList<cNestedItem> *subitems = item->SubItems();
       if ((subitems == NULL) || (subitems->Count() == 0))
@@ -237,7 +289,7 @@ epg2timer::cFilterFile *epg2timer::cFilterFile::Load(const char *Filename)
              if (filter != NULL)
                 esyslog("epg2timer: error while loading filters: multiple types");
              else
-                filter = ParseFilterLine(*(filterFile->_context), line, subitem->SubItems());
+                filter = ParseFilterLine(*newContext, line, subitem->SubItems());
              }
           else if (startswith(line, "action=")) {
              cParameterParser actionParser(line);
@@ -258,46 +310,30 @@ epg2timer::cFilterFile *epg2timer::cFilterFile::Load(const char *Filename)
           }
 
       if (filter != NULL)
-         filterFile->_filters->Add(new cEventFilter(filterName, action, *filename, filter));
+         newFilters->Add(new cEventFilter(filterName, action, *filename, filter));
       }
 
-  if (filterFile->_filters->Count() == 0) {
-     esyslog("epg2timer: no filters in file %s", Filename);
-     delete filterFile;
-     return NULL;
+  if (newFilters->Count() == 0) {
+     esyslog("epg2timer: no filters in file %s", *_filename);
+     delete newFilters;
+     delete newContext;
+     return false;
      }
 
-  return filterFile;
-}
-
-
-epg2timer::cFilterFile::cFilterFile(const char *Filename)
-{
-  _filename = Filename;
-  _lastModTime = LastModifiedTime(Filename);
-  _context = new cFilterContext();
-  _filters = new cList<cEventFilter>();
-
-  SetDescription("epg2timer-Update");
-}
-
-
-epg2timer::cFilterFile::~cFilterFile(void)
-{
-  Cancel(5);
   delete _filters;
   delete _context;
-}
+  _context = newContext;
+  _filters = newFilters;
 
-
-void epg2timer::cFilterFile::UpdateTimers(void)
-{
-  Start();
+  Unlock();
+  return true;
 }
 
 
 void epg2timer::cFilterFile::Action(void)
 {
+  Lock();
+
   // Order of locks:
   // Timers, Channels, Recordings, Schedules
 
@@ -348,4 +384,6 @@ void epg2timer::cFilterFile::Action(void)
 
   // release write-lock on timer
   Timers.DecBeingEdited();
+
+  Unlock();
 }

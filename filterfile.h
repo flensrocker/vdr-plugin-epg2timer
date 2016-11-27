@@ -91,6 +91,8 @@ namespace epg2timer
   private:
     cFilterFile(const char *Filename);
 
+    bool Load(void);
+
     cString _filename;
     time_t _lastModTime;
     cFilterContext *_context;
