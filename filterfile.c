@@ -1,4 +1,6 @@
-#include "filterparser.h"
+#include "filterfile.h"
+
+#include <vdr/config.h>
 
 #include "eventfilter.h"
 #include "filtercontext.h"
@@ -205,14 +207,13 @@ namespace epg2timer
 }
 
 
-bool epg2timer::cFilterParser::LoadFilterFile(const cFilterContext& Context, const char *Filename, cList<cEventFilter> &Filters)
+epg2timer::cFilterFile *epg2timer::cFilterFile::Load(const char *Filename)
 {
-  Filters.Clear();
-
   cNestedItemList filters;
   if (!filters.Load(Filename))
-     return false;
+     return NULL;
 
+  cFilterFile *filterFile = new cFilterFile(Filename);
   for (cNestedItem *item = filters.First(); item; item = filters.Next(item)) {
       cList<cNestedItem> *subitems = item->SubItems();
       if ((subitems == NULL) || (subitems->Count() == 0))
@@ -235,7 +236,7 @@ bool epg2timer::cFilterParser::LoadFilterFile(const cFilterContext& Context, con
              if (filter != NULL)
                 esyslog("epg2timer, load filters: multiple types");
              else
-                filter = ParseFilterLine(Context, line, subitem->SubItems());
+                filter = ParseFilterLine(*(filterFile->_context), line, subitem->SubItems());
              }
           else if (startswith(line, "action=")) {
              cParameterParser actionParser(line);
@@ -256,8 +257,24 @@ bool epg2timer::cFilterParser::LoadFilterFile(const cFilterContext& Context, con
           }
 
       if (filter != NULL)
-         Filters.Add(new cEventFilter(filterName, action, *filename, filter));
+         filterFile->_filters->Add(new cEventFilter(filterName, action, *filename, filter));
       }
 
-  return true;
+  return filterFile;
+}
+
+
+epg2timer::cFilterFile::cFilterFile(const char *Filename)
+{
+  _filename = Filename;
+  _lastModTime = LastModifiedTime(Filename);
+  _context = new cFilterContext();
+  _filters = new cList<cEventFilter>();
+}
+
+
+epg2timer::cFilterFile::~cFilterFile(void)
+{
+  delete _filters;
+  delete _context;
 }

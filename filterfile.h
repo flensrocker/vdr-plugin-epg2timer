@@ -1,15 +1,14 @@
-#ifndef epg2timer_filterparser_h
-#define epg2timer_filterparser_h
+#ifndef epg2timer_filterfile_h
+#define epg2timer_filterfile_h
 
-#include <vdr/config.h>
+#include <vdr/tools.h>
 
 namespace epg2timer
 {
-  class cEventFilterBase;
   class cEventFilter;
   class cFilterContext;
 
-  class cFilterParser
+  class cFilterFile
   {
   public:
     // Channel filter-line:
@@ -78,7 +77,20 @@ namespace epg2timer
     //   }
     //   action=record
     // }
-    static bool LoadFilterFile(const cFilterContext& Context, const char *Filename, cList<cEventFilter> &Filters);
+    static cFilterFile *Load(const char *Filename);
+
+    ~cFilterFile(void);
+
+    const cList<cEventFilter> &Filters(void) { return *_filters; };
+    const cFilterContext &Context(void) { return *_context; };
+
+  private:
+    cFilterFile(const char *Filename);
+
+    cString _filename;
+    time_t _lastModTime;
+    cFilterContext *_context;
+    cList<cEventFilter> *_filters;
   };
 }
 

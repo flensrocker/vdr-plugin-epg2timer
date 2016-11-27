@@ -11,7 +11,7 @@
 #include "epgtools.h"
 #include "eventfilter.h"
 #include "filtercontext.h"
-#include "filterparser.h"
+#include "filterfile.h"
 #include "timertools.h"
 
 static const char *VERSION        = "0.0.1";
@@ -151,13 +151,13 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
         return "Missing filename";
         }
 
-     epg2timer::cFilterContext context;
-     cList<epg2timer::cEventFilter> filters;
-     if (!epg2timer::cFilterParser::LoadFilterFile(context, Option, filters)) {
+     epg2timer::cFilterFile *filterFile = epg2timer::cFilterFile::Load(Option);
+     if (filterFile == NULL) {
         ReplyCode = 501;
         return cString::sprintf("Error in file %s", Option);
         }
-     if (filters.Count() == 0) {
+     if (filterFile->Filters().Count() == 0) {
+        delete filterFile;
         ReplyCode = 501;
         return cString::sprintf("No filters in file %s", Option);
         }
@@ -181,8 +181,8 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
             if (events) {
                for (const cEvent *e = events->First(); e; e = events->Next(e)) {
                    eventCount++;
-                   for (const epg2timer::cEventFilter *filter = filters.First(); filter; filter = filters.Next(filter)) {
-                       if (filter->Matches(context, e)) {
+                   for (const epg2timer::cEventFilter *filter = filterFile->Filters().First(); filter; filter = filterFile->Filters().Next(filter)) {
+                       if (filter->Matches(filterFile->Context(), e)) {
                           foundCount++;
                           msg = cString::sprintf("%s\nFilter: %s\n(%u) %s: %s", *msg, filter->Name(), e->EventID(), *TimeToString(e->StartTime()), e->Title());
                           if (hasTimerWriteLock) {
@@ -212,6 +212,7 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
 
      Timers.DecBeingEdited();
 
+     delete filterFile;
      msg = cString::sprintf("%s\n%d events processed, found %d", *msg, eventCount, foundCount);
      return msg;
      }
