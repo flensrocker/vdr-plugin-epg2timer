@@ -156,65 +156,18 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
         ReplyCode = 501;
         return cString::sprintf("Error in file %s", Option);
         }
-     if (filterFile->Filters().Count() == 0) {
+     if (filterFile->FilterCount() == 0) {
         delete filterFile;
         ReplyCode = 501;
         return cString::sprintf("No filters in file %s", Option);
         }
 
-     // get write lock on timer
-     bool hasTimerWriteLock = !Timers.BeingEdited();
-     Timers.IncBeingEdited();
-
-     int eventCount = 0;
-     int foundCount = 0;
-
-     cString msg = cString::sprintf("Matching Events for filters in '%s':", Option);
-     ReplyCode = 250;
-
-     // get read lock on schedules
-     cSchedulesLock schedulesLock;
-     const cSchedules *schedules = cSchedules::Schedules(schedulesLock);
-     if (schedules) {
-        for (const cSchedule *s = schedules->First(); s; s = schedules->Next(s)) {
-            const cList<cEvent> *events = s->Events();
-            if (events) {
-               for (const cEvent *e = events->First(); e; e = events->Next(e)) {
-                   eventCount++;
-                   for (const epg2timer::cEventFilter *filter = filterFile->Filters().First(); filter; filter = filterFile->Filters().Next(filter)) {
-                       if (filter->Matches(filterFile->Context(), e)) {
-                          foundCount++;
-                          msg = cString::sprintf("%s\nFilter: %s\n(%u) %s: %s", *msg, filter->Name(), e->EventID(), *TimeToString(e->StartTime()), e->Title());
-                          if (hasTimerWriteLock) {
-                             cTimer *t = epg2timer::cTimerTools::FindTimer(&Timers, schedules, e);
-                             if (t) {
-                                msg = cString::sprintf("%s\n has timer", *msg);
-                                if (filter->UpdateTimer(t, e)) {
-                                   msg = cString::sprintf("%s (updated)", *msg);
-                                   Timers.SetModified();
-                                   }
-                                }
-                             else {
-                                cTimer *nt = filter->CreateTimer(e);
-                                if (nt != NULL) {
-                                   Timers.Add(nt);
-                                   Timers.SetModified();
-                                   msg = cString::sprintf("%s\n created timer on %s", *msg, *e->ChannelID().ToString());
-                                   }
-                                }
-                             }
-                          }
-                      }
-                   }
-               }
-            }
-        }
-
-     Timers.DecBeingEdited();
-
+     filterFile->UpdateTimers();
+     while (filterFile->Active())
+           cCondWait::SleepMs(1000);
      delete filterFile;
-     msg = cString::sprintf("%s\n%d events processed, found %d", *msg, eventCount, foundCount);
-     return msg;
+
+     return "timers have been updated";
      }
   return NULL;
 }

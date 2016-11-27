@@ -5,6 +5,7 @@
 #include "eventfilter.h"
 #include "filtercontext.h"
 #include "parameterparser.h"
+#include "timertools.h"
 
 
 namespace epg2timer
@@ -120,7 +121,7 @@ namespace epg2timer
 
     if ((strcmp(type, "and") == 0) || (strcmp(type, "or") == 0)) {
        if ((SubItems == NULL) || (SubItems->Count() == 0))
-          esyslog("epg2timer, parse filter \"%s\": missing subtimes", type);
+          esyslog("epg2timer: error while parsing filter \"%s\": missing subitems", type);
        else {
           cList<cEventFilterBase> *subFilters = NULL;
           for (cNestedItem *si = SubItems->First(); si; si = SubItems->Next(si)) {
@@ -234,7 +235,7 @@ epg2timer::cFilterFile *epg2timer::cFilterFile::Load(const char *Filename)
 
           if (startswith(line, "type=")) {
              if (filter != NULL)
-                esyslog("epg2timer, load filters: multiple types");
+                esyslog("epg2timer: error while loading filters: multiple types");
              else
                 filter = ParseFilterLine(*(filterFile->_context), line, subitem->SubItems());
              }
@@ -260,6 +261,12 @@ epg2timer::cFilterFile *epg2timer::cFilterFile::Load(const char *Filename)
          filterFile->_filters->Add(new cEventFilter(filterName, action, *filename, filter));
       }
 
+  if (filterFile->_filters->Count() == 0) {
+     esyslog("epg2timer: no filters in file %s", Filename);
+     delete filterFile;
+     return NULL;
+     }
+
   return filterFile;
 }
 
@@ -270,11 +277,75 @@ epg2timer::cFilterFile::cFilterFile(const char *Filename)
   _lastModTime = LastModifiedTime(Filename);
   _context = new cFilterContext();
   _filters = new cList<cEventFilter>();
+
+  SetDescription("epg2timer-Update");
 }
 
 
 epg2timer::cFilterFile::~cFilterFile(void)
 {
+  Cancel(5);
   delete _filters;
   delete _context;
+}
+
+
+void epg2timer::cFilterFile::UpdateTimers(void)
+{
+  Start();
+}
+
+
+void epg2timer::cFilterFile::Action(void)
+{
+  // Order of locks:
+  // Timers, Channels, Recordings, Schedules
+
+  // get write lock on timer
+  bool hasTimerWriteLock = !Timers.BeingEdited();
+  Timers.IncBeingEdited();
+
+  int eventCount = 0;
+  int foundCount = 0;
+
+  // get read lock on schedules
+  cSchedulesLock schedulesLock;
+  const cSchedules *schedules = cSchedules::Schedules(schedulesLock);
+  if (schedules) {
+     for (const cSchedule *s = schedules->First(); Running() && s; s = schedules->Next(s)) {
+         const cList<cEvent> *events = s->Events();
+         if (events) {
+            for (const cEvent *e = events->First(); Running() && e; e = events->Next(e)) {
+                eventCount++;
+                for (const cEventFilter *filter = _filters->First(); Running() && filter; filter = _filters->Next(filter)) {
+                    if (filter->Matches(*_context, e)) {
+                       foundCount++;
+                       //msg = cString::sprintf("%s\nFilter: %s\n(%u) %s: %s", *msg, filter->Name(), e->EventID(), *TimeToString(e->StartTime()), e->Title());
+                       if (hasTimerWriteLock) {
+                          cTimer *t = cTimerTools::FindTimer(&Timers, schedules, e);
+                          if (t) {
+                             //msg = cString::sprintf("%s\n has timer", *msg);
+                             if (filter->UpdateTimer(t, e)) {
+                                //msg = cString::sprintf("%s (updated)", *msg);
+                                Timers.SetModified();
+                                }
+                             }
+                          else {
+                             cTimer *nt = filter->CreateTimer(e);
+                             if (nt != NULL) {
+                                Timers.Add(nt);
+                                Timers.SetModified();
+                                //msg = cString::sprintf("%s\n created timer on %s", *msg, *e->ChannelID().ToString());
+                                }
+                             }
+                          }
+                       }
+                   }
+                }
+            }
+         }
+     }
+
+  // release write-lock on timer
+  Timers.DecBeingEdited();
 }

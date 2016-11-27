@@ -1,6 +1,7 @@
 #ifndef epg2timer_filterfile_h
 #define epg2timer_filterfile_h
 
+#include <vdr/thread.h>
 #include <vdr/tools.h>
 
 namespace epg2timer
@@ -8,7 +9,7 @@ namespace epg2timer
   class cEventFilter;
   class cFilterContext;
 
-  class cFilterFile
+  class cFilterFile : public cThread
   {
   public:
     // Channel filter-line:
@@ -81,8 +82,11 @@ namespace epg2timer
 
     ~cFilterFile(void);
 
-    const cList<cEventFilter> &Filters(void) { return *_filters; };
-    const cFilterContext &Context(void) { return *_context; };
+    int FilterCount(void) const { return _filters->Count(); };
+    void UpdateTimers(void);
+
+  protected:
+    virtual void Action(void);
 
   private:
     cFilterFile(const char *Filename);
