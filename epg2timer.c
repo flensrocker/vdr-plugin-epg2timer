@@ -102,7 +102,7 @@ void cPluginEpg2timer::MainThreadHook(void)
   // TODO specify update interval in epg2timer.conf
   if (_filters != NULL) {
      time_t now = time(NULL);
-     if ((_lastUpdateAt == 0) || (_lastUpdateAt + UPDATE_INTERVAL_SEC > now)) {
+     if ((_lastUpdateAt == 0) || (_lastUpdateAt + UPDATE_INTERVAL_SEC < now)) {
         _lastUpdateAt = now;
         _filters->UpdateTimers();
         }
