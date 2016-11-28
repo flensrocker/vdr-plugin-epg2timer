@@ -8,11 +8,7 @@
 
 #include <vdr/plugin.h>
 
-#include "epgtools.h"
-#include "eventfilter.h"
-#include "filtercontext.h"
 #include "filterfile.h"
-#include "timertools.h"
 
 static const char *VERSION        = "0.0.1";
 static const char *DESCRIPTION    = "auto-create timer from epg";
@@ -21,6 +17,8 @@ static const char *MAINMENUENTRY  = "epg2timer";
 class cPluginEpg2timer : public cPlugin {
 private:
   // Add any member variables or functions you may need here.
+  epg2timer::cFilterFile *_filters;
+  time_t _lastUpdateAt;
 
 public:
   cPluginEpg2timer(void);
@@ -50,6 +48,8 @@ cPluginEpg2timer::cPluginEpg2timer(void)
   // Initialize any member variables here.
   // DON'T DO ANYTHING ELSE THAT MAY HAVE SIDE EFFECTS, REQUIRE GLOBAL
   // VDR OBJECTS TO EXIST OR PRODUCE ANY OUTPUT!
+  _filters = NULL;
+  _lastUpdateAt = 0;
 }
 
 cPluginEpg2timer::~cPluginEpg2timer()
@@ -78,12 +78,15 @@ bool cPluginEpg2timer::Initialize(void)
 bool cPluginEpg2timer::Start(void)
 {
   // Start any background activities the plugin shall perform.
+  cString confFile = cString::sprintf("%s/%s", ConfigDirectory(Name()), "epg2timer.conf");
+  _filters = epg2timer::cFilterFile::Load(*confFile);
   return true;
 }
 
 void cPluginEpg2timer::Stop(void)
 {
   // Stop any background activities the plugin is performing.
+  delete _filters;
 }
 
 void cPluginEpg2timer::Housekeeping(void)
@@ -95,6 +98,15 @@ void cPluginEpg2timer::MainThreadHook(void)
 {
   // Perform actions in the context of the main program thread.
   // WARNING: Use with great care - see PLUGINS.html!
+#define UPDATE_INTERVAL_SEC 600
+  // TODO specify update interval in epg2timer.conf
+  if (_filters != NULL) {
+     time_t now = time(NULL);
+     if ((_lastUpdateAt == 0) || (_lastUpdateAt + UPDATE_INTERVAL_SEC > now)) {
+        _lastUpdateAt = now;
+        _filters->UpdateTimers();
+        }
+     }
 }
 
 cString cPluginEpg2timer::Active(void)
