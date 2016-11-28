@@ -105,6 +105,5 @@ cString epg2timer::cFilenameTools::ReplaceTags(const char *Filename, const cEven
      newFilename = cString::sprintf("%s%s", *cString(Filename, Filename + lastTagPos), *newFilename);
 
   delete values;
-  isyslog("epg2timer: convert filename from %s to %s", Filename, *newFilename);
   return newFilename;
 }

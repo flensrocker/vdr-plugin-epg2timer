@@ -28,23 +28,30 @@ const char *epg2timer::cEventFilter::Name() const
   return *_name;
 }
 
+#define AUX_STARTTAG "<epg2timer>"
+#define AUX_ENDTAG "</epg2timer>"
 
 bool epg2timer::cEventFilter::AuxMatches(const cTimer *Timer) const
 {
+  bool matches = false;
   const char *aux = Timer->Aux();
-  if ((aux == NULL) || (strlen(aux) < 11) || !startswith(aux, "epg2timer="))
-     return false;
+  if ((aux == NULL) || ((aux = strstr(aux, AUX_STARTTAG)) == NULL))
+     return matches;
 
-  return startswith(aux + 10, *cString::sprintf("%s{", *_name));
+  char *name = NULL;
+  if (sscanf(aux, AUX_STARTTAG "%m[^<]" AUX_ENDTAG, &name) == 1)
+     matches = (strcmp(name, *_name) == 0);
+  free(name);
+  return matches;
 }
 
 
 cTimer *epg2timer::cEventFilter::CreateTimer(const cEvent *Event) const
 {
   cTimer *timer = new cTimer(Event);
-
-  // mark as epg2timer-timer
-  timer->SetAux(*cString::sprintf("epg2timer=%s{", Name()));
+  // it's only pseudo xml, so ignore special characters
+  // if someone names his filter with "</epgtimer>" in it, it's his problem...
+  timer->SetAux(*cString::sprintf(AUX_STARTTAG "%s" AUX_ENDTAG, Name()));
 
   if ((*_filename != NULL) && (**_filename != 0))
      timer->SetFile(*cFilenameTools::ReplaceTags(*_filename, Event));
@@ -52,6 +59,7 @@ cTimer *epg2timer::cEventFilter::CreateTimer(const cEvent *Event) const
   if (_action == faInactive)
      timer->ClrFlags(tfActive);
 
+  dsyslog("epg2timer: new timer for event %d, %s", Event->EventID(), Event->Title());
   return timer;
 }
 
@@ -59,8 +67,10 @@ cTimer *epg2timer::cEventFilter::CreateTimer(const cEvent *Event) const
 bool epg2timer::cEventFilter::UpdateTimer(cTimer *Timer, const cEvent *Event) const
 {
   bool updated = false;
-  if (!AuxMatches(Timer))
+  if (!AuxMatches(Timer)) {
+     dsyslog("epg2timer: aux mismatch: %s", Timer->Aux());
      return updated;
+     }
 
   // active flag must not be updated, it's under the user's control
 
