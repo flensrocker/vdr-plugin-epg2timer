@@ -78,7 +78,7 @@ bool epg2timer::cEventFilter::UpdateTimer(cTimer *Timer, const cEvent *Event) co
   if ((*_filename != NULL) && (**_filename != 0)) {
      cString filename = cFilenameTools::ReplaceTags(*_filename, Event);
      if (strcmp(*filename, Timer->File()) != 0) {
-        dsyslog("epg2timer: adjust filename from %s to %s", Timer->File(), *filename);
+        dsyslog("epg2timer: adjust filename from %s to %s on event (%d) %s", Timer->File(), *filename, Event->EventID(), Event->Title());
         Timer->SetFile(*filename);
         updated = true;
         }
@@ -100,17 +100,17 @@ bool epg2timer::cEventFilter::UpdateTimer(cTimer *Timer, const cEvent *Event) co
   if (stop >= 2400)
      stop -= 2400;
   if (Timer->Start() != start) {
-     dsyslog("epg2timer: adjust start from %d to %d", Timer->Start(), start);
+     dsyslog("epg2timer: adjust start from %d to %d on event (%d) %s", Timer->Start(), start, Event->EventID(), Event->Title());
      Timer->SetStart(start);
      updated = true;
      }
   if (Timer->Stop() != stop) {
-     dsyslog("epg2timer: adjust stop from %d to %d", Timer->Stop(), stop);
+     dsyslog("epg2timer: adjust stop from %d to %d on event (%d) %s", Timer->Stop(), stop, Event->EventID(), Event->Title());
      Timer->SetStop(stop);
      updated = true;
      }
   if (Timer->Day() != day) {
-     dsyslog("epg2timer: adjust day from %d to %d", Timer->Day(), day);
+     dsyslog("epg2timer: adjust day from %d to %d on event (%d) %s", Timer->Day(), day, Event->EventID(), Event->Title());
      Timer->SetDay(day);
      updated = true;
      }
