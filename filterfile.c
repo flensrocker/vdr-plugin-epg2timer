@@ -348,10 +348,15 @@ void epg2timer::cFilterFile::Action(void)
   cSchedulesLock schedulesLock;
   const cSchedules *schedules = cSchedules::Schedules(schedulesLock);
   if (schedules) {
+     time_t now = time(NULL);
+
      for (const cSchedule *s = schedules->First(); Running() && s; s = schedules->Next(s)) {
          const cList<cEvent> *events = s->Events();
          if (events) {
             for (const cEvent *e = events->First(); Running() && e; e = events->Next(e)) {
+                if (e->EndTime() < now)
+                   continue;
+
                 eventCount++;
                 for (const cEventFilter *filter = _filters->First(); Running() && filter; filter = _filters->Next(filter)) {
                     if (filter->Matches(*_context, e)) {
