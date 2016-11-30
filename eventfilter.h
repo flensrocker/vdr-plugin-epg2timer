@@ -30,7 +30,7 @@ namespace epg2timer
                           faInactive = 2
                         };
 
-    cEventFilter(const char *Name, eFilterActions Action, const char *Filename, const cEventFilterBase *Filter);
+    cEventFilter(const char *Name, eFilterActions Action, const char *Filename, const cEventFilterBase *Filter, int MarginStart, int MarginStop, int Priority, int Lifetime);
     virtual ~cEventFilter(void) {};
     virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const;
 
@@ -38,6 +38,7 @@ namespace epg2timer
     eFilterActions Action() const;
 
     bool AuxMatches(const cTimer *Timer) const;
+    void CalculateStartStopDay(cTimer *Timer, const cEvent *Event, int *Start, int *Stop, time_t *Day) const;
     cTimer *CreateTimer(const cEvent *Event) const;
     bool UpdateTimer(cTimer *Timer, const cEvent *Event) const;
 
@@ -45,6 +46,10 @@ namespace epg2timer
     cString _name;
     eFilterActions _action;
     cString _filename;
+    int _marginStart;
+    int _marginStop;
+    int _priority;
+    int _lifetime;
     const cEventFilterBase *_filter;
   };
 

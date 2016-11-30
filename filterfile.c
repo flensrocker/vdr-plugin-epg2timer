@@ -304,6 +304,10 @@ bool epg2timer::cFilterFile::Load(void)
 
       cEventFilter::eFilterActions action = cEventFilter::faRecord;
       cString filename;
+      int marginStart = -1;
+      int marginStop = -1;
+      int priority = Setup.DefaultPriority;
+      int lifetime = Setup.DefaultLifetime;
       cEventFilterBase *filter = NULL;
 
       for (cNestedItem *subitem = subitems->First(); subitem; subitem = subitems->Next(subitem)) {
@@ -319,23 +323,40 @@ bool epg2timer::cFilterFile::Load(void)
              }
           else {
              cParameterParser lineParser(line);
+             const char *value;
 
-             const char *actionText = lineParser.Get("action");
-             if (actionText != NULL) {
-                if (strcmp(actionText, "record") == 0)
+             value = lineParser.Get("action");
+             if (value != NULL) {
+                if (strcmp(value, "record") == 0)
                    action = cEventFilter::faRecord;
-                else if (strcmp(actionText, "inactive") == 0)
+                else if (strcmp(value, "inactive") == 0)
                    action = cEventFilter::faInactive;
                 }
 
-             const char *filenameText = lineParser.Get("filename");
-             if ((filenameText != NULL) && (*filenameText != 0))
-                filename = filenameText;
+             value = lineParser.Get("filename");
+             if ((value != NULL) && (*value != 0))
+                filename = value;
+
+             value = lineParser.Get("marginStart");
+             if ((value != 0) && (*value != 0) && isnumber(value))
+                marginStart = atoi(value);
+
+             value = lineParser.Get("marginStop");
+             if ((value != 0) && (*value != 0) && isnumber(value))
+                marginStop = atoi(value);
+
+             value = lineParser.Get("priority");
+             if ((value != 0) && (*value != 0) && isnumber(value))
+                priority = atoi(value);
+
+             value = lineParser.Get("lifetime");
+             if ((value != 0) && (*value != 0) && isnumber(value))
+                lifetime = atoi(value);
              }
           }
 
       if (filter != NULL)
-         newFilters->Add(new cEventFilter(filterName, action, *filename, filter));
+         newFilters->Add(new cEventFilter(filterName, action, *filename, filter, marginStart, marginStop, priority, lifetime));
       }
 
   if (newFilters->Count() == 0) {

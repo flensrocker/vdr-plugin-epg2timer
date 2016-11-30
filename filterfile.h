@@ -59,7 +59,6 @@ namespace epg2timer
     // # Beside %title% and %shorttext% you can use any tag-value from the description.
     // # Values can be formatted with leading zeros like %Staffel:2%.
     // # Custom leading characters can be provided like %Staffel:2,x%.
-    // # TODO custom margin start/stop, priority, lifetime
     //
     // # global parameter
     // updateIntervalMin=10
@@ -67,7 +66,9 @@ namespace epg2timer
     // # Create inactive timers for all "Star Trek" events on all channels
     // Star Trek {
     //   type=contains,search=star trek,field=title
-    //   action=inactive
+    // # all optional parameters can be written in one line
+    // # or may be split into multiple lines
+    //   action=inactive,marginStart=5,marginStop=10,priority=90,lifetime=99
     //   filename=%title%~Staffel_%Staffel:2%~%Staffelfolge:2%_-_%shorttext%
     // }
     // # Record all "Journal" and "Reportage" events on arte.tv
