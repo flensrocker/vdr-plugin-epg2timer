@@ -149,6 +149,16 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
      return NULL;
 
   // Process SVDRP commands this plugin implements
+  if (strcasecmp(Command, "updt") == 0) {
+     if (_filters != NULL) {
+        _filters->UpdateTimers(true);
+        return cString::sprintf("timer-update triggered");
+        }
+
+     ReplyCode = 501;
+     return cString::sprintf("no filter loaded");
+     }
+  else
   if (strcasecmp(Command, "test") == 0) {
      if ((Option == NULL) || (*Option == 0)) {
         ReplyCode = 501;

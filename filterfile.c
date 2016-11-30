@@ -369,6 +369,9 @@ void epg2timer::cFilterFile::Action(void)
 
   int eventCount = 0;
   int foundCount = 0;
+  int updatedCount = 0;
+  int createdCount = 0;
+  uint64_t start = cTimeMs::Now();
 
   // get read lock on schedules
   cSchedulesLock schedulesLock;
@@ -387,13 +390,11 @@ void epg2timer::cFilterFile::Action(void)
                 for (const cEventFilter *filter = _filters->First(); Running() && filter; filter = _filters->Next(filter)) {
                     if (filter->Matches(*_context, e)) {
                        foundCount++;
-                       //msg = cString::sprintf("%s\nFilter: %s\n(%u) %s: %s", *msg, filter->Name(), e->EventID(), *TimeToString(e->StartTime()), e->Title());
                        if (hasTimerWriteLock) {
                           cTimer *t = cTimerTools::FindTimer(&Timers, schedules, e);
                           if (t) {
-                             //msg = cString::sprintf("%s\n has timer", *msg);
                              if (filter->UpdateTimer(t, e)) {
-                                //msg = cString::sprintf("%s (updated)", *msg);
+                                updatedCount++;
                                 Timers.SetModified();
                                 }
                              }
@@ -402,7 +403,7 @@ void epg2timer::cFilterFile::Action(void)
                              if (nt != NULL) {
                                 Timers.Add(nt);
                                 Timers.SetModified();
-                                //msg = cString::sprintf("%s\n created timer on %s", *msg, *e->ChannelID().ToString());
+                                createdCount++;
                                 }
                              }
                           }
@@ -416,5 +417,8 @@ void epg2timer::cFilterFile::Action(void)
   // release write-lock on timer
   Timers.DecBeingEdited();
 
+  uint64_t end = cTimeMs::Now();
+  isyslog("epg2timer: parsed %d events, matched %d, update %d timers, created %d timers in %dms", eventCount, foundCount, updatedCount, createdCount, end - start);
+  
   Unlock();
 }
