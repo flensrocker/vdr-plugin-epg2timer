@@ -1,10 +1,10 @@
 This is a "plugin" for the Video Disk Recorder (VDR).
 
-Written by:                  Your Name <email@host.dom>
+Written by:                  Lars Hanisch <dvb@flensrocker.de
 
-Project's homepage:          URL
+Project's homepage:          https://github.com/flensrocker/vdr-plugin-epg2timer
 
-Latest version available at: URL
+Latest version available at: https://github.com/flensrocker/vdr-plugin-epg2timer
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,3 +13,128 @@ the Free Software Foundation; either version 2 of the License, or
 See the file COPYING for more information.
 
 Description:
+
+This plugin parses all EPG events with various filters
+and creates timers for matching events.
+
+Configuration
+-------------
+In the plugin's configuration directory place a file called epg2timer.conf.
+It must follow the format of vdr's "nested configuration file".
+All keys are case sensitive.
+A line can contain multiple key-value pairs. Each key-value pair is separated
+with a comma. The key is followed by an equal-sign. Commas and backslashes inside
+the value must be escaped with a backslash.
+key1=value1,key2=value2,key3=value\, which has a comma,key4=value\\with a backslash
+
+Example
+-------
+updateIntervalMin=10
+Star Trek {
+  type=contains,search=star trek,field=title
+  action=inactive,marginStart=5,marginStop=10,priority=90,lifetime=99
+  filename=%title%~S%Staffel:2%~E%Staffelfolge:2%_-_%shorttext%
+}
+ARTE Journal/Reportage {
+  type=and {
+    type=channel,from=C-1-1051-28724,to=C-1-1051-28724
+    type=or {
+      type=contains,search=arte journal,field=title
+      type=contains,search=arte reportage,field=title
+    }
+  }
+  action=record,priority=10,lifetime=10
+}
+
+Global options
+--------------
+- updateIntervalMin
+  Specify the update interal in minutes
+
+Filter
+------
+Name of filter {
+# exactly one type-line must be specified
+  type=...
+# optional parameters:
+  action=[record|inactive]
+  marginStart=[integer]
+  marginStop=[integer]
+  priority=[integer]
+  lifetime=[integer]
+  filename=[string]
+}
+
+Timers are tagged with the name of the filter. Don't change them if you want to get
+your timers updated on event changes.
+
+If you have "rich" EPG with tags like season information, year, genre etc. you can insert
+the values of those tags into the filename.
+
+  filename=%title%~S%Staffel:2%~E%Staffelfolge:2%_-_%shorttext%
+
+Everything between to %-characters is interpreted as a tag. If the description of the event
+contains this tag, it's value will be inserted. If the tag has a trail colon and number, its
+value is left-padded with zeros (%Staffel:2%).
+You can set another character for padding: %Staffel:2,x%
+
+Filter types
+------------
+- And (all enclosed filters must match)
+  type=and {
+    filter
+    filter
+    ...
+  }
+
+- Or (at least one filter must match)
+  type=or {
+    filter
+    filter
+    ...
+  }
+
+And- and Or-filters can be nested in any level:
+  type=and {
+    type=or {
+      type=contains,...
+      type=contains,...
+      type=and {
+        type=contains,...
+        type=contains,...
+      }
+    }
+    type=channel,...
+  }
+
+- Channel (channel of event must be inside the channel range)
+  type=channel,from=channel-id,to=channel-id
+  If "from" is missing, all channels from the begining up to "to" are matching.
+  If "to" is missing, all channels from "from" up to the end are matching.
+  If both are missing... you're doing it wrong. :) Then you don't need a channel-filter.
+
+- Contains (look for text in title, shorttext and/or description
+  type=contains,search=needle,field=all,field=title,field=shorttext,field=description
+  A simple "contains" filter. You can specify the fields which should be processed.
+  The search ignores case, punctation and decorations like accents, umlauts etc. (ä=>ä, é=>e).
+
+- Tag (look for tags inside the description)
+  type=tag[,missing=true|false],<tagname>=[int|str]<op><value>,<tagname>=[int|str]<op><value>,...
+  Default of "missing" is false. If "missing" is true, a missing tag is interpreted as a match.
+  All tags in the line must match for matching the whole filter.
+  The value of a tag can be interpreted as an integer (int) or a string (str).
+  There are several operators.
+  For integers: ==, !=, <, <=, >, >=
+  For strings : ==, !=, <, <=, >, >=, empty, notempty, contains, notcontains, startswith, endswith
+  As the "contains" filter the values are converted to lowercase and all punctation and decorations are removed.
+  Leading spaces of the compare values are ignored (for better readability of the filters).
+
+  Examples:
+  Match all events with episodes which belongs to a season between 3 and 5 (but match all epsiodes without season information)
+  type=tag,missing=true,Staffel=int>=3,Staffel=int<=5
+
+  Match all events with an epsiode-title which contains "Spock"
+  type=tag,Episode=strcontains Spock
+
+  Match all news events
+  type=tag,Genre=str==Nachrichten
