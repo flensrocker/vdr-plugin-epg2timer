@@ -225,6 +225,8 @@ epg2timer::cFilterFile::cFilterFile(const char *Filename)
 {
   _filename = Filename;
   _lastModTime = LastModifiedTime(Filename);
+  _lastUpdateAt = 0;
+  _updateIntervalMin = 10;
   _context = new cFilterContext();
   _filters = new cList<cEventFilter>();
 
@@ -240,8 +242,10 @@ epg2timer::cFilterFile::~cFilterFile(void)
 }
 
 
-void epg2timer::cFilterFile::UpdateTimers(void)
+void epg2timer::cFilterFile::UpdateTimers(bool Force)
 {
+  bool needsUpdate = Force;
+
   time_t modTime = LastModifiedTime(*_filename);
   if (modTime == 0)
      esyslog("epg2timer: can't get last modified time of %s", *_filename);
@@ -250,9 +254,19 @@ void epg2timer::cFilterFile::UpdateTimers(void)
      _lastModTime = modTime;
      if (!Load())
         esyslog("epg2timer: can't reload file %s, keeping current filters", *_filename);
+     needsUpdate = true;
      }
 
-  Start();
+  if (!needsUpdate) {
+     time_t now = time(NULL);
+     if ((_lastUpdateAt == 0) || (_lastUpdateAt + _updateIntervalMin * 60 < now)) {
+        _lastUpdateAt = now;
+        needsUpdate = true;
+        }
+     }
+
+  if (needsUpdate)
+     Start();
 }
 
 
@@ -266,12 +280,24 @@ bool epg2timer::cFilterFile::Load(void)
 
   cFilterContext *newContext = new cFilterContext();
   cList<cEventFilter> *newFilters = new cList<cEventFilter>();
+  int newUpdateIntervalMin = _updateIntervalMin;
 
   for (cNestedItem *item = filters.First(); item; item = filters.Next(item)) {
       cList<cNestedItem> *subitems = item->SubItems();
-      if ((subitems == NULL) || (subitems->Count() == 0))
-         continue;
 
+      // no subitems => global parameters
+      if ((subitems == NULL) || (subitems->Count() == 0)) {
+         cParameterParser globalParser(item->Text());
+         const char *updateIntervalMin = globalParser.Get("updateIntervalMin");
+         if ((updateIntervalMin != 0) && (*updateIntervalMin != 0) && isnumber(updateIntervalMin)) {
+            newUpdateIntervalMin = atoi(updateIntervalMin);
+            if (newUpdateIntervalMin < 1)
+               newUpdateIntervalMin = 1; // one minute minimum
+            }
+         continue;
+         }
+
+      // subitems => it's a filter
       const char *filterName = item->Text();
       if ((filterName == NULL) || (*filterName == 0))
          continue;
@@ -291,19 +317,18 @@ bool epg2timer::cFilterFile::Load(void)
              else
                 filter = ParseFilterLine(*newContext, line, subitem->SubItems());
              }
-          else if (startswith(line, "action=")) {
-             cParameterParser actionParser(line);
-             const char *actionText = actionParser.Get("action");
+          else {
+             cParameterParser lineParser(line);
+
+             const char *actionText = lineParser.Get("action");
              if (actionText != NULL) {
                 if (strcmp(actionText, "record") == 0)
                    action = cEventFilter::faRecord;
                 else if (strcmp(actionText, "inactive") == 0)
                    action = cEventFilter::faInactive;
                 }
-             }
-          else if (startswith(line, "filename=")) {
-             cParameterParser filenameParser(line);
-             const char *filenameText = filenameParser.Get("filename");
+
+             const char *filenameText = lineParser.Get("filename");
              if ((filenameText != NULL) && (*filenameText != 0))
                 filename = filenameText;
              }
@@ -324,6 +349,7 @@ bool epg2timer::cFilterFile::Load(void)
   delete _context;
   _context = newContext;
   _filters = newFilters;
+  _updateIntervalMin = newUpdateIntervalMin;
 
   Unlock();
   return true;

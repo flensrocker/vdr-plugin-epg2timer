@@ -61,6 +61,9 @@ namespace epg2timer
     // # Custom leading characters can be provided like %Staffel:2,x%.
     // # TODO custom margin start/stop, priority, lifetime
     //
+    // # global parameter
+    // updateIntervalMin=10
+    //
     // # Create inactive timers for all "Star Trek" events on all channels
     // Star Trek {
     //   type=contains,search=star trek,field=title
@@ -83,7 +86,7 @@ namespace epg2timer
     ~cFilterFile(void);
 
     int FilterCount(void) const { return _filters->Count(); };
-    void UpdateTimers(void);
+    void UpdateTimers(bool Force);
 
   protected:
     virtual void Action(void);
@@ -95,6 +98,8 @@ namespace epg2timer
 
     cString _filename;
     time_t _lastModTime;
+    time_t _lastUpdateAt;
+    int _updateIntervalMin;
     cFilterContext *_context;
     cList<cEventFilter> *_filters;
   };

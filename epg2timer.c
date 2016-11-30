@@ -18,7 +18,6 @@ class cPluginEpg2timer : public cPlugin {
 private:
   // Add any member variables or functions you may need here.
   epg2timer::cFilterFile *_filters;
-  time_t _lastUpdateAt;
 
 public:
   cPluginEpg2timer(void);
@@ -49,7 +48,6 @@ cPluginEpg2timer::cPluginEpg2timer(void)
   // DON'T DO ANYTHING ELSE THAT MAY HAVE SIDE EFFECTS, REQUIRE GLOBAL
   // VDR OBJECTS TO EXIST OR PRODUCE ANY OUTPUT!
   _filters = NULL;
-  _lastUpdateAt = 0;
 }
 
 cPluginEpg2timer::~cPluginEpg2timer()
@@ -98,15 +96,9 @@ void cPluginEpg2timer::MainThreadHook(void)
 {
   // Perform actions in the context of the main program thread.
   // WARNING: Use with great care - see PLUGINS.html!
-#define UPDATE_INTERVAL_SEC 600
-  // TODO specify update interval in epg2timer.conf
-  if (_filters != NULL) {
-     time_t now = time(NULL);
-     if ((_lastUpdateAt == 0) || (_lastUpdateAt + UPDATE_INTERVAL_SEC < now)) {
-        _lastUpdateAt = now;
-        _filters->UpdateTimers();
-        }
-     }
+
+  if (_filters != NULL)
+     _filters->UpdateTimers(false);
 }
 
 cString cPluginEpg2timer::Active(void)
@@ -174,7 +166,7 @@ cString cPluginEpg2timer::SVDRPCommand(const char *Command, const char *Option, 
         return cString::sprintf("No filters in file %s", Option);
         }
 
-     filterFile->UpdateTimers();
+     filterFile->UpdateTimers(true);
      while (filterFile->Active())
            cCondWait::SleepMs(1000);
      delete filterFile;
