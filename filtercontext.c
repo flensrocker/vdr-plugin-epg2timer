@@ -3,6 +3,7 @@
 epg2timer::cFilterContext::cFilterContext(void)
 {
   _converter = new cStringConverter();
+  _channels = NULL;
 }
 
 

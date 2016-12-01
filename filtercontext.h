@@ -3,6 +3,8 @@
 
 #include "stringconverter.h"
 
+class cChannels;
+
 
 namespace epg2timer
 {
@@ -13,9 +15,12 @@ namespace epg2timer
     ~cFilterContext(void);
 
     cStringConverter *Converter(void) const { return _converter; };
+    const cChannels *Channels(void) const { return _channels; }
+    void SetChannels(const cChannels *Channels) { _channels = Channels; }
 
   private:
     cStringConverter *_converter;
+    const cChannels *_channels;
   };
 }
 

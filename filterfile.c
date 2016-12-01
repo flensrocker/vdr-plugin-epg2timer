@@ -385,8 +385,27 @@ void epg2timer::cFilterFile::Action(void)
   // Timers, Channels, Recordings, Schedules
 
   // get write lock on timer
+#if APIVERSNUM < 20301
+  cTimers *timers = &Timers;
   bool hasTimerWriteLock = !Timers.BeingEdited();
-  Timers.IncBeingEdited();
+  timers->IncBeingEdited();
+#else
+  LOCK_TIMERS_WRITE;
+  cTimers *timers = Timers;
+  bool hasTimerWriteLock = true;
+  timers->SetExplicitModify();
+#endif
+  if (timers == NULL) {
+     Unlock();
+     return;
+     }
+
+#if APIVERSNUM < 20301
+  _context->SetChannels(&Channels);
+#else
+  LOCK_CHANNELS_READ;
+  _context->SetChannels(Channels);
+#endif
 
   int eventCount = 0;
   int foundCount = 0;
@@ -395,8 +414,13 @@ void epg2timer::cFilterFile::Action(void)
   uint64_t start = cTimeMs::Now();
 
   // get read lock on schedules
+#if APIVERSNUM < 20301
   cSchedulesLock schedulesLock;
   const cSchedules *schedules = cSchedules::Schedules(schedulesLock);
+#else
+  LOCK_SCHEDULES_READ;
+  const cSchedules *schedules = Schedules;
+#endif
   if (schedules) {
      time_t now = time(NULL);
 
@@ -412,18 +436,18 @@ void epg2timer::cFilterFile::Action(void)
                     if (filter->Matches(*_context, e)) {
                        foundCount++;
                        if (hasTimerWriteLock) {
-                          cTimer *t = cTimerTools::FindTimer(&Timers, schedules, e);
+                          cTimer *t = cTimerTools::FindTimer(timers, schedules, e);
                           if (t) {
                              if (filter->UpdateTimer(t, e)) {
                                 updatedCount++;
-                                Timers.SetModified();
+                                timers->SetModified();
                                 }
                              }
                           else {
                              cTimer *nt = filter->CreateTimer(e);
                              if (nt != NULL) {
-                                Timers.Add(nt);
-                                Timers.SetModified();
+                                timers->Add(nt);
+                                timers->SetModified();
                                 createdCount++;
                                 }
                              }
@@ -435,11 +459,14 @@ void epg2timer::cFilterFile::Action(void)
          }
      }
 
+#if APIVERSNUM < 20301
   // release write-lock on timer
-  Timers.DecBeingEdited();
+  timers->DecBeingEdited();
+#endif
+  _context->SetChannels(NULL);
 
   uint64_t end = cTimeMs::Now();
-  isyslog("epg2timer: parsed %d events, matched %d, update %d timers, created %d timers in %dms", eventCount, foundCount, updatedCount, createdCount, end - start);
+  isyslog("epg2timer: %d events parsed, %d matched, %d timers updated, %d timers created in %lums", eventCount, foundCount, updatedCount, createdCount, end - start);
   
   Unlock();
 }

@@ -140,7 +140,7 @@ bool epg2timer::cEventFilter::UpdateTimer(cTimer *Timer, const cEvent *Event) co
      updated = true;
      }
   if (Timer->Day() != day) {
-     dsyslog("epg2timer: adjust day from %d to %d on event (%d) %s", Timer->Day(), day, Event->EventID(), Event->Title());
+     dsyslog("epg2timer: adjust day from %ld to %ld on event (%d) %s", Timer->Day(), day, Event->EventID(), Event->Title());
      Timer->SetDay(day);
      updated = true;
      }
@@ -221,11 +221,7 @@ bool epg2timer::cEventFilterChannel::Matches(const cFilterContext& Context, cons
   if (eventChannelID == tChannelID::InvalidID)
      return false;
 
-#if APIVERSNUM < 20301
-  cChannels *channels = &Channels;
-#else
-  // TODO vdr 2.3: get read-only channels
-#endif
+  const cChannels *channels = Context.Channels();
   if (channels == NULL)
      return false;
 
