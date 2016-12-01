@@ -221,7 +221,11 @@ bool epg2timer::cEventFilterChannel::Matches(const cFilterContext& Context, cons
   if (eventChannelID == tChannelID::InvalidID)
      return false;
 
+#if APIVERSNUM < 20301
+  cChannels *channels = Context.Channels();
+#else
   const cChannels *channels = Context.Channels();
+#endif
   if (channels == NULL)
      return false;
 
