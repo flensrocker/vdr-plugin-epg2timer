@@ -1,5 +1,5 @@
-#ifndef epg2timer_timertools_h
-#define epg2timer_timertools_h
+#ifndef epg2timer_tools_timer_h
+#define epg2timer_tools_timer_h
 
 #include <vdr/timers.h>
 

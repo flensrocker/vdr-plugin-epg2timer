@@ -1,6 +1,6 @@
-#include "filenametools.h"
+#include "filename.h"
 
-#include "epgtools.h"
+#include "epg.h"
 
 
 namespace epg2timer

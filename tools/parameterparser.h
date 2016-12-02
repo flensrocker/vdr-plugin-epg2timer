@@ -1,5 +1,5 @@
-#ifndef epg2timer_parameterparser_h
-#define epg2timer_parameterparser_h
+#ifndef epg2timer_tools_parameterparser_h
+#define epg2timer_tools_parameterparser_h
 
 #include <vdr/tools.h>
 

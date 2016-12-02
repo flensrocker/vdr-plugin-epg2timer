@@ -2,10 +2,16 @@
 
 #include <vdr/config.h>
 
+#include "filters/andor.h"
+#include "filters/channel.h"
+#include "filters/contains.h"
+#include "filters/tag.h"
+
 #include "eventfilter.h"
 #include "filtercontext.h"
-#include "parameterparser.h"
-#include "timertools.h"
+#include "tools/parameterparser.h"
+#include "tools/stringconverter.h"
+#include "tools/timer.h"
 
 
 namespace epg2timer

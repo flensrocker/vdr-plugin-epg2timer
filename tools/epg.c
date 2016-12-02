@@ -1,4 +1,4 @@
-#include "epgtools.h"
+#include "epg.h"
 
 
 cStringList *epg2timer::cEpgTools::ExtractTagValues(const cStringList &Tags, const cEvent *Event)

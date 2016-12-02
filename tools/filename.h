@@ -1,5 +1,5 @@
-#ifndef epg2timer_filenametools_h
-#define epg2timer_filenametools_h
+#ifndef epg2timer_tools_filename_h
+#define epg2timer_tools_filename_h
 
 #include <vdr/epg.h>
 

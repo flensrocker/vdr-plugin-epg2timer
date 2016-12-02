@@ -54,7 +54,7 @@ DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 
 ### The object files (add further files here):
 
-OBJS = $(patsubst %.c,%.o,$(wildcard *.c))
+OBJS = $(patsubst %.c,%.o,$(wildcard *.c)) $(patsubst %.c,%.o,$(wildcard tools/*.c)) $(patsubst %.c,%.o,$(wildcard filters/*.c))
 
 ### The main target:
 

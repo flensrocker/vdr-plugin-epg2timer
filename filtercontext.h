@@ -1,13 +1,13 @@
 #ifndef epg2timer_filtercontext_h
 #define epg2timer_filtercontext_h
 
-#include "stringconverter.h"
-
 class cChannels;
 
 
 namespace epg2timer
 {
+  class cStringConverter;
+  
   class cFilterContext
   {
   public:

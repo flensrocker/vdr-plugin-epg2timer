@@ -1,5 +1,5 @@
-#ifndef epg2timer_stringconverter_h
-#define epg2timer_stringconverter_h
+#ifndef epg2timer_tools_stringconverter_h
+#define epg2timer_tools_stringconverter_h
 
 #include <unicode/uconfig.h>
 #include <unicode/platform.h>
