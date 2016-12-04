@@ -122,8 +122,8 @@ And- and Or-filters can be nested in any level:
   If "to" is missing, all channels from "from" up to the end are matching.
   If both are missing... you're doing it wrong. :) Then you don't need a channel-filter.
 
-- Contains (look for text in title, shorttext and/or description
-  type=contains,search=needle,field=all,field=title,field=shorttext,field=description
+- Contains[Not] (look for text in title, shorttext and/or description
+  type=[contains|containsnot],search=needle,field=all,field=title,field=shorttext,field=description
   A simple "contains" filter. You can specify the fields which should be processed.
   The search ignores case, punctation and decorations like accents, umlauts etc. (ä => a, é => e).
 

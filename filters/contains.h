@@ -9,13 +9,14 @@ namespace epg2timer
   class cEventFilterContains : public cEventFilterBase
   {
   public:
-    cEventFilterContains(const cFilterContext& Context, const char *Needle, int Fields);
+    cEventFilterContains(const cFilterContext& Context, const char *Needle, int Fields, bool Not);
     virtual ~cEventFilterContains(void) {};
     virtual bool Matches(const cFilterContext& Context, const cEvent *Event) const;
 
   private:
     cString _needle;
     int _fields;
+    bool _not;
 
     bool Matches(const cFilterContext& Context, const char *Text) const;
   };

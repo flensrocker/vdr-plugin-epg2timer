@@ -160,7 +160,8 @@ namespace epg2timer
 
        return new cEventFilterChannel(from, to);
        }
-    else if (strcmp(type, "contains") == 0) {
+    else if (startswith(type, "contains")) {
+       bool containsnot = startswith(type + 8, "not");
        const char *needle = parser.Get("search");
        if ((needle == NULL) || (*needle == 0))
           return NULL;
@@ -183,7 +184,7 @@ namespace epg2timer
                  }
               }
           }
-       return new cEventFilterContains(Context, needle, fields);
+       return new cEventFilterContains(Context, needle, fields, containsnot);
        }
     else if (strcmp(type, "starttime") == 0) {
        const char *after = parser.Get("after");

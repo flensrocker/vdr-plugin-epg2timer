@@ -4,10 +4,11 @@
 #include "../filtercontext.h"
 
 
-epg2timer::cEventFilterContains::cEventFilterContains(const cFilterContext& Context, const char *Needle, int Fields)
+epg2timer::cEventFilterContains::cEventFilterContains(const cFilterContext& Context, const char *Needle, int Fields, bool Not)
 {
   _needle = Context.Converter()->Convert(Needle);
   _fields = Fields;
+  _not = Not;
 }
 
 bool epg2timer::cEventFilterContains::Matches(const cFilterContext& Context, const cEvent *Event) const
@@ -29,5 +30,8 @@ bool epg2timer::cEventFilterContains::Matches(const cFilterContext& Context, con
   if ((Text == NULL) || (*Text == 0))
      return false;
   cString t = Context.Converter()->Convert(Text);
-  return (strcasestr(t, *_needle) != NULL);
+  bool matches = (strcasestr(t, *_needle) != NULL);
+  if (_not)
+     return !matches;
+  return matches;
 }
