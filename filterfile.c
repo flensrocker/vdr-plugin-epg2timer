@@ -5,6 +5,7 @@
 #include "filters/andor.h"
 #include "filters/channel.h"
 #include "filters/contains.h"
+#include "filters/starttime.h"
 #include "filters/tag.h"
 
 #include "eventfilter.h"
@@ -183,6 +184,11 @@ namespace epg2timer
               }
           }
        return new cEventFilterContains(Context, needle, fields);
+       }
+    else if (strcmp(type, "starttime") == 0) {
+       const char *after = parser.Get("after");
+       const char *before = parser.Get("before");
+       return new cEventFilterStartTime(after, before);
        }
     else if (strcmp(type, "tag") == 0) {
        const char *m = parser.Get("missing");

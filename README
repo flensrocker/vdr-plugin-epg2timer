@@ -1,4 +1,4 @@
-This is a "plugin" for the Video Disk Recorder (VDR).
+ï»¿This is a "plugin" for the Video Disk Recorder (VDR).
 
 Written by:                  Lars Hanisch <dvb@flensrocker.de>
 
@@ -125,7 +125,13 @@ And- and Or-filters can be nested in any level:
 - Contains (look for text in title, shorttext and/or description
   type=contains,search=needle,field=all,field=title,field=shorttext,field=description
   A simple "contains" filter. You can specify the fields which should be processed.
-  The search ignores case, punctation and decorations like accents, umlauts etc. (ä=>ä, é=>e).
+  The search ignores case, punctation and decorations like accents, umlauts etc. (Ã¤ => a, Ã© => e).
+
+- Starttime (starttime of event must be inside the given range)
+  type=starttime,after=HHMM,before=HHMM
+  If "after" is missing, all times from "0000" up to and including "before" are matching.
+  If "before" is missing, all times later as (or equal to) "after" up to "2359" are matching.
+  If both are missing... you're doing it wrong. :) Then you don't need a starttime-filter.
 
 - Tag (look for tags inside the description)
   type=tag[,missing=true|false],<tagname>=[int|str]<op><value>,<tagname>=[int|str]<op><value>,...

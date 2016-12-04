@@ -20,6 +20,10 @@ namespace epg2timer
     // type=contains,search=needle,field=all,field=title,field=shorttext,field=description
     // "field" is optional, default is "all"
 
+    // Starttime filter-line:
+    // type=starttime,after=HHMM,before=HHMM
+    // Default value of "after" is "0000", default of "before" is "2400"
+
     // Tag filter-line:
     // type=tag[,missing=true|false],<tagname>=[int|str]<op><value>,<tagname>=[int|str]<op><value>,...
     //   missing: default is "false". With "true" a tag matches if it's not present in the description.
