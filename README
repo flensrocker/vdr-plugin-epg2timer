@@ -1,6 +1,6 @@
 This is a "plugin" for the Video Disk Recorder (VDR).
 
-Written by:                  Lars Hanisch <dvb@flensrocker.de
+Written by:                  Lars Hanisch <dvb@flensrocker.de>
 
 Project's homepage:          https://github.com/flensrocker/vdr-plugin-epg2timer
 
@@ -12,10 +12,19 @@ the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
 See the file COPYING for more information.
 
-Description:
-
+Description
+-----------
 This plugin parses all EPG events with various filters
 and creates timers for matching events.
+
+Dependencies
+------------
+For removing punctuation, accents, umlauts and other decorations,
+a transliterator of libicu is used (see tools/stringconverter.c).
+You can disable the use of libicu by defining DISABLE_LIBICU=1 when
+calling make. In this case the strings are not converted and the
+search terms must exactly match (the contains-filter will ignore case
+but the tag-filter will not).
 
 Configuration
 -------------

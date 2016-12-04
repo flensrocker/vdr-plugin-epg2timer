@@ -47,8 +47,12 @@ SOFILE = libvdr-$(PLUGIN).so
 
 ### Includes and Defines (add further entries here):
 
-INCLUDES += $(shell pkg-config --cflags icu-uc icu-io)
-LDADD = $(shell pkg-config --libs icu-uc icu-io)
+ifeq ($(origin DISABLE_LIBICU), undefined)
+	INCLUDES += $(shell pkg-config --cflags icu-uc icu-io)
+	LDADD = $(shell pkg-config --libs icu-uc icu-io)
+else
+	DEFINES += -DEPG2TIMER_DISABLE_LIBICU=1
+endif
 
 DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 
