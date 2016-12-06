@@ -216,7 +216,7 @@ namespace epg2timer
           return NULL;
        return new cEventFilterTag(tagFilters, missing);
        }
-    
+
     return NULL;
   }
 }
@@ -419,26 +419,27 @@ void epg2timer::cFilterFile::Action(void)
   // Timers, Channels, Recordings, Schedules
 
   // get write lock on timer
+  // and read locks on channels and schedules
 #if APIVERSNUM < 20301
   cTimers *timers = &Timers;
   bool hasTimerWriteLock = !Timers.BeingEdited();
   timers->IncBeingEdited();
+
+  _context->SetChannels(&Channels);
+
+  cSchedulesLock schedulesLock;
+  const cSchedules *schedules = cSchedules::Schedules(schedulesLock);
 #else
   LOCK_TIMERS_WRITE;
   cTimers *timers = Timers;
   bool hasTimerWriteLock = true;
   timers->SetExplicitModify();
-#endif
-  if (timers == NULL) {
-     Unlock();
-     return;
-     }
 
-#if APIVERSNUM < 20301
-  _context->SetChannels(&Channels);
-#else
   LOCK_CHANNELS_READ;
   _context->SetChannels(Channels);
+
+  LOCK_SCHEDULES_READ;
+  const cSchedules *schedules = Schedules;
 #endif
 
   int eventCount = 0;
@@ -447,14 +448,6 @@ void epg2timer::cFilterFile::Action(void)
   int createdCount = 0;
   uint64_t start = cTimeMs::Now();
 
-  // get read lock on schedules
-#if APIVERSNUM < 20301
-  cSchedulesLock schedulesLock;
-  const cSchedules *schedules = cSchedules::Schedules(schedulesLock);
-#else
-  LOCK_SCHEDULES_READ;
-  const cSchedules *schedules = Schedules;
-#endif
   if (schedules) {
      time_t now = time(NULL);
 
@@ -501,6 +494,6 @@ void epg2timer::cFilterFile::Action(void)
 
   uint64_t end = cTimeMs::Now();
   isyslog("epg2timer: %d events parsed, %d matched, %d timers updated, %d timers created in %lums", eventCount, foundCount, updatedCount, createdCount, end - start);
-  
+
   Unlock();
 }
