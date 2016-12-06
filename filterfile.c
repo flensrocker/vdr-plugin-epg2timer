@@ -9,9 +9,10 @@
 #include "filters/tag.h"
 
 #include "eventfilter.h"
-#include "filtercontext.h"
+#include "tools/filtercontext.h"
 #include "tools/parameterparser.h"
 #include "tools/stringconverter.h"
+#include "tools/tagsynonym.h"
 #include "tools/timer.h"
 
 
@@ -307,6 +308,26 @@ bool epg2timer::cFilterFile::Load(void)
             if (newUpdateIntervalMin < 1)
                newUpdateIntervalMin = 1; // one minute minimum
             }
+
+         int tsCount = globalParser.Count("tagsynonym");
+         for (int t = 0; t < tsCount; t++) {
+            const char *tagSynonyms = globalParser.Get("tagsynonym", t);
+            if ((tagSynonyms != NULL) && (*tagSynonyms != 0)) {
+               isyslog("epg2timer: tag synonyms: \"%s\"", tagSynonyms);
+               cStringList *synonyms = new cStringList();
+               char *tsOrig = strdup(tagSynonyms);
+               char *ts = tsOrig;
+               char *s;
+               char *next;
+               while ((s = strtok_r(ts, ":", &next)) != NULL) {
+                     isyslog("epg2timer: tag synonym \"%s\"", s);
+                     synonyms->Append(strdup(s));
+                     ts = NULL;
+                     }
+               newContext->AddTagSynonyms(new cTagSynonym(synonyms));
+               free(tsOrig);
+               }
+            }
          continue;
          }
 
@@ -369,7 +390,7 @@ bool epg2timer::cFilterFile::Load(void)
           }
 
       if (filter != NULL)
-         newFilters->Add(new cEventFilter(filterName, action, *filename, filter, marginStart, marginStop, priority, lifetime));
+         newFilters->Add(new cEventFilter(*newContext, filterName, action, *filename, filter, marginStart, marginStop, priority, lifetime));
       }
 
   if (newFilters->Count() == 0) {

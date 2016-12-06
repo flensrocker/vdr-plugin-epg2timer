@@ -1,5 +1,7 @@
-#ifndef epg2timer_filtercontext_h
-#define epg2timer_filtercontext_h
+#ifndef epg2timer_tools_filtercontext_h
+#define epg2timer_tools_filtercontext_h
+
+#include <vdr/tools.h>
 
 class cChannels;
 
@@ -7,6 +9,7 @@ class cChannels;
 namespace epg2timer
 {
   class cStringConverter;
+  class cTagSynonym;
   
   class cFilterContext
   {
@@ -22,9 +25,13 @@ namespace epg2timer
 #endif
     void SetChannels(const cChannels *Channels) { _channels = Channels; }
 
+    void AddTagSynonyms(cTagSynonym *Synonyms);
+    const cStringList *TagSynonyms(const char *Tag) const;
+
   private:
     cStringConverter *_converter;
     const cChannels *_channels;
+    cList<cTagSynonym> _tagSynonyms;
   };
 }
 

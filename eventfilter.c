@@ -3,7 +3,8 @@
 #include "tools/filename.h"
 
 
-epg2timer::cEventFilter::cEventFilter(const char *Name, eFilterActions Action, const char *Filename, const cEventFilterBase *Filter, int MarginStart, int MarginStop, int Priority, int Lifetime)
+epg2timer::cEventFilter::cEventFilter(const cFilterContext& Context, const char *Name, eFilterActions Action, const char *Filename, const cEventFilterBase *Filter, int MarginStart, int MarginStop, int Priority, int Lifetime)
+ :_context(Context)
 {
   _name = Name;
   _action = Action;
@@ -92,7 +93,7 @@ cTimer *epg2timer::cEventFilter::CreateTimer(const cEvent *Event) const
   timer->SetLifetime(_lifetime);
 
   if ((*_filename != NULL) && (**_filename != 0))
-     timer->SetFile(*cFilenameTools::ReplaceTags(*_filename, Event));
+     timer->SetFile(*cFilenameTools::ReplaceTags(_context, *_filename, Event));
 
   if (_action == faInactive)
      timer->ClrFlags(tfActive);
@@ -114,7 +115,7 @@ bool epg2timer::cEventFilter::UpdateTimer(cTimer *Timer, const cEvent *Event) co
 
   // update filename if tags in description are updated
   if ((*_filename != NULL) && (**_filename != 0)) {
-     cString filename = cFilenameTools::ReplaceTags(*_filename, Event);
+     cString filename = cFilenameTools::ReplaceTags(_context, *_filename, Event);
      if (strcmp(*filename, Timer->File()) != 0) {
         dsyslog("epg2timer: adjust filename from %s to %s on event (%d) %s", Timer->File(), *filename, Event->EventID(), Event->Title());
         Timer->SetFile(*filename);

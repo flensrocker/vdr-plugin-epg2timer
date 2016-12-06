@@ -1,6 +1,6 @@
 #include "channel.h"
 
-#include "../filtercontext.h"
+#include "../tools/filtercontext.h"
 
 
 epg2timer::cEventFilterChannel::cEventFilterChannel(tChannelID FromChannel, tChannelID ToChannel)

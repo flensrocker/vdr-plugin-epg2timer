@@ -6,10 +6,12 @@
 
 namespace epg2timer
 {
+  class cFilterContext;
+
   class cEpgTools
   {
   public:
-    static cStringList *ExtractTagValues(const cStringList &Tags, const cEvent *Event);
+    static cStringList *ExtractTagValues(const cFilterContext& Context, const cStringList &Tags, const cEvent *Event);
   };
 }
 

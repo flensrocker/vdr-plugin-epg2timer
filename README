@@ -60,6 +60,12 @@ Global options
 - updateIntervalMin
   Specify the update interal in minutes
 
+- tagsynonym=tag1:tag2:tag3:...
+  Use "tag1" in your filters, but insert values from all mentioned tags.
+  Useful if you have multiple EPG provider in different languages.
+  Can be specified multiple times.
+  Example: tagsynonym=Staffel:season:saison:stagione
+
 Filter
 ------
 Name of filter {

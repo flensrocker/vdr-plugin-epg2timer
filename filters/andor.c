@@ -1,6 +1,6 @@
 #include "andor.h"
 
-#include "../filtercontext.h"
+#include "../tools/filtercontext.h"
 
 
 epg2timer::cEventFilterList::cEventFilterList(cList<cEventFilterBase> *Filters)

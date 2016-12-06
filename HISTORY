@@ -11,3 +11,7 @@ VDR Plugin 'epg2timer' Revision History
 - added starttime-filter
 - added containsnot-filter
 
+2016-12-06: Version 0.0.3
+
+- add support for tag-synonyms
+

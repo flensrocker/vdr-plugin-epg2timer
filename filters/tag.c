@@ -2,7 +2,7 @@
 
 #include "../tools/epg.h"
 #include "../tools/stringconverter.h"
-#include "../filtercontext.h"
+#include "../tools/filtercontext.h"
 
 
 epg2timer::cEventFilterTag::cTagFilter::cTagFilter(const cFilterContext& Context, const char *Tag, eTagFilterOperator Op, const char *Comp, bool Missing)
@@ -113,7 +113,7 @@ bool epg2timer::cEventFilterTag::Matches(const cFilterContext& Context, const cE
   if ((Event == NULL) || (_tagFilters->Count() == 0))
      return false;
 
-  cStringList *values = cEpgTools::ExtractTagValues(_tagNames, Event);
+  cStringList *values = cEpgTools::ExtractTagValues(Context, _tagNames, Event);
   if (values == NULL)
      return _missing;
 

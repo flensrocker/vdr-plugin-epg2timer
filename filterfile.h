@@ -66,6 +66,8 @@ namespace epg2timer
     //
     // # global parameter
     // updateIntervalMin=10
+    // tagsynonym=Staffel:season:stagione:saison
+    // tagsynonym=Episode:episode:episodio:épisode
     //
     // # Create inactive timers for all "Star Trek" events on all channels
     // Star Trek {

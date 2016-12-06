@@ -10,7 +10,7 @@
 
 #include "filterfile.h"
 
-static const char *VERSION        = "0.0.2";
+static const char *VERSION        = "0.0.3";
 static const char *DESCRIPTION    = "auto-create timer from epg";
 static const char *MAINMENUENTRY  = "epg2timer";
 

@@ -1,7 +1,7 @@
 #include "contains.h"
 
 #include "../tools/stringconverter.h"
-#include "../filtercontext.h"
+#include "../tools/filtercontext.h"
 
 
 epg2timer::cEventFilterContains::cEventFilterContains(const cFilterContext& Context, const char *Needle, int Fields, bool Not)

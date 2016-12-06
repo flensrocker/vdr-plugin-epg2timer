@@ -55,7 +55,7 @@ namespace epg2timer
 }
 
 
-cString epg2timer::cFilenameTools::ReplaceTags(const char *Filename, const cEvent *Event)
+cString epg2timer::cFilenameTools::ReplaceTags(const cFilterContext& Context, const char *Filename, const cEvent *Event)
 {
   if ((Filename == NULL) || (*Filename == 0) || (Event == NULL))
      return NULL;
@@ -81,7 +81,7 @@ cString epg2timer::cFilenameTools::ReplaceTags(const char *Filename, const cEven
   for (cFilenameTag *tag = tags.First(); tag; tag = tags.Next(tag))
       tagNames.Append(strdup(*(tag->_tag)));
 
-  cStringList *values = cEpgTools::ExtractTagValues(tagNames, Event);
+  cStringList *values = cEpgTools::ExtractTagValues(Context, tagNames, Event);
   if (values == NULL)
      return cString(Filename);
 
